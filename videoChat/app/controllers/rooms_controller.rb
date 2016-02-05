@@ -23,7 +23,7 @@ before_filter :config_opentok,:except => [:index]
 
   def party
     @room = Room.find(params[:id])
-
+    @apiKey = "45486522"
     @tok_token = @opentok.generate_token @room.sessionId 
   end
 
