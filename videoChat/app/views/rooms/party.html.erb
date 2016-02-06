@@ -6,36 +6,31 @@
 </head>
 
 <body>
+  <div id="videoContainer">
+    <div id="myPublisher"></div>
+    <div id="mySubscriber"></div>
+  </div>
 
   <script src='//static.opentok.com/v2/js/opentok.min.js'></script> 
   <script>
-    var apiKey =  "45486522";
+    var apiKey =  "<%= @apiKey %>";
     var sessionId = "<%= @room.sessionId %>";
     var token = "<%= @tok_token %>";
- 
     var session = OT.initSession(apiKey, sessionId);
-
-    session.connect(token, function(error){
-      if(error)
-      {
-        alert("There is a error!");
-      }
-      else
-      {
-        session.publish();
-      }
+ 
+    session.on("streamCreated", function(event) {
+      session.subscribe(event.stream, "mySubscriber");
     });
-
-    session.on("streamCreated", function(event){
-      session.subscribe(event.stream);
+  
+    session.on("streamDestroyed", function(event) {
+      $( "#videoContainer" ).append( "<div id=\"mySubscriber\"></div>" );
     });
-
-</script>
-  <p>
-    <!--<%= "Api Key: " + @apiKey %><br>
-    <%= "Room: " + @room.name %><br>
-    <%= "Session ID: " + @room.sessionId %><br>
-    <%= "Token: " + @tok_token %>-->
-  </p>
+ 
+    session.connect(token, function(error) {
+      // Replace with the replacement element ID:
+      var publisher = OT.initPublisher("myPublisher")
+      session.publish(publisher);
+    });      
+  </script>
 </body>
 </html>
