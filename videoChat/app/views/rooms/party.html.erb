@@ -1,21 +1,27 @@
+<!DOCTYPE html>
+<html>
 <head>
   <meta charset="utf-8">
   <title><%= @room.name %></title>
 </head>
 
 <body>
-  <script src='//static.opentok.com/v2/js/opentok.min.js'></script>
+
+  <script src='//static.opentok.com/v2/js/opentok.min.js'></script> 
   <script>
-    var apiKey = "45486522";
-    var sessionId = <%= @room.sessionId %>;
-    var token = <%= @tok_token %>;
+    var apiKey =  "45486522";
+    var sessionId = "<%= @room.sessionId %>";
+    var token = "<%= @tok_token %>";
+ 
     var session = OT.initSession(apiKey, sessionId);
 
-    session.connect(token, function(err){
-      if(err){
-        alert("There is an error!");
+    session.connect(token, function(error){
+      if(error)
+      {
+        alert("There is a error!");
       }
-      else{
+      else
+      {
         session.publish();
       }
     });
@@ -24,10 +30,12 @@
       session.subscribe(event.stream);
     });
 
-  </script>
-  <br>
-  <p><%= "ApiKey: " + @apiKey %>
-  <br><%= "Room: " + @room.name %>
-  <br><%= "SessionId: " + @room.sessionId %>
-  <br><%= "Tok_token" + @tok_token %></p>
+</script>
+  <p>
+    <!--<%= "Api Key: " + @apiKey %><br>
+    <%= "Room: " + @room.name %><br>
+    <%= "Session ID: " + @room.sessionId %><br>
+    <%= "Token: " + @tok_token %>-->
+  </p>
 </body>
+</html>

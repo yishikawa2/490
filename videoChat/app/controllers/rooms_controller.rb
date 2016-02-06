@@ -1,5 +1,5 @@
 class RoomsController < ApplicationController
-before_filter :config_opentok,:except => [:index]
+  before_filter :config_opentok,:except => [:index]
 
   def index
     @rooms = Room.where(:public => true).order("created_at DESC")
@@ -30,7 +30,8 @@ before_filter :config_opentok,:except => [:index]
   private 
   def config_opentok
     if @opentok.nil?
-      @opentok = OpenTok::OpenTok.new "45486522", "edcafba1717263b3b076515a8b0623c656dfb12c"
+      require "opentok"
+      @opentok = OpenTok::OpenTok.new 45486522, "edcafba1717263b3b076515a8b0623c656dfb12c"
     end
   end
 end
