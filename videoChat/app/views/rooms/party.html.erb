@@ -1,36 +1,25 @@
-<!DOCTYPE html>
-<html>
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <title><%= @room.name %></title>
 </head>
-
 <body>
-  <div id="videoContainer">
-    <div id="myPublisher"></div>
-    <div id="mySubscriber"></div>
-  </div>
-
-  <script src='//static.opentok.com/v2/js/opentok.min.js'></script> 
+  <script src='//static.opentok.com/v2/js/opentok.min.js'></script>
   <script>
     var apiKey =  "<%= @apiKey %>";
     var sessionId = "<%= @room.sessionId %>";
     var token = "<%= @tok_token %>";
     var session = OT.initSession(apiKey, sessionId);
- 
-    session.on("streamCreated", function(event) {
-      session.subscribe(event.stream, "mySubscriber");
+    session.connect(token, function(error){
+      if(error){
+       alert("There is an error!"); 
+      }
+      else{
+        session.publish();
+      }
     });
-  
-    session.on("streamDestroyed", function(event) {
-      $( "#videoContainer" ).append( "<div id=\"mySubscriber\"></div>" );
+
+    session.on("streamCreated", function(event){
+      session.subscribe(event.stream);
     });
- 
-    session.connect(token, function(error) {
-      // Replace with the replacement element ID:
-      var publisher = OT.initPublisher("myPublisher")
-      session.publish(publisher);
-    });      
   </script>
 </body>
-</html>
