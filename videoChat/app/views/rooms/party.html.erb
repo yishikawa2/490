@@ -4,11 +4,19 @@
 </head>
 
 <body>
-  <div id="invitation">Invite your friends! Share the url of this page http://52.8.54.5/videoChat/party/<%= @room.id %></div>
   
-  <div id="videobox">
+  
+  <div id="invitation", style="text-align:center;">
+    <font size="14">
+      Invite your friends! Share the URL of this page<br>
+      <font color="red"><b>http://52.8.54.5/videoChat/party/<%= @room.id %></b></font>
+    </font>
   </div>
+  <br>
+  <br>
+  <div id='videobox', style='margin:0 auto;'></div><br>
   
+    
   <script src='//static.opentok.com/v2/js/opentok.min.js'></script>
   <script>
     var apiKey =  "<%= @apiKey %>";
@@ -23,7 +31,7 @@
     
     var publisher;
     function sessionConnectedHandler(event) {
-      publisher = OT.initPublisher('videobox', {width:500, height:400});
+      publisher = OT.initPublisher('videobox', {width:300, height:200});
       session.publish(publisher);
      
       for (var i = 0; i < event.streams.length; i++) {
@@ -33,7 +41,6 @@
         }
       }
     }
-
     function streamCreatedHandler(event) {
       for (var i = 0; i < event.streams.length; i++) {
         if (event.streams[i].connection.connectionId != session.connection.connectionId) 
@@ -42,12 +49,12 @@
         }
       }
     }
-
     function subscribeToStreams(stream) {
       var div = document.createElement('div');
       div.setAttribute('id', 'stream' + stream.streamId);
+      div.style.float = "left";
       document.body.appendChild(div);
-      session.subscribe(stream, div.id, {width:500, height:400});
+      session.subscribe(stream, div.id, {width:400, height:300});
     }
   </script>
 </body>
