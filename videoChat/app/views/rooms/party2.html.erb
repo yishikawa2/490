@@ -8,6 +8,7 @@
     var sessionId = "<%= @room.sessionId %>";
     var token = "<%= @tok_token %>";
         
+    OT.setLogLevel(OT.DEBUG);
     var session = OT.initSession(apiKey, sessionId);
     session.addEventListener('sessionConnected', sessionConnectedHandler);
     session.addEventListener('streamCreated', streamCreatedHandler);
@@ -68,7 +69,7 @@
     <font size="14">
       Invite your friends! Share the URL of this page<br>
       <font color="red">
-      <b>https://bikkun.com/videoChat/party/<%= @room.id %>-<%= @room.name  %></b>
+      <b>https://bikkun.com/videoChat/party/<%= @room.id %></b>
       </font>
     </font>
   </div>

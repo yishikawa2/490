@@ -20,7 +20,7 @@ Public? <%= f.check_box :public %><br/><br/>
 
 <% @rooms.each do |room| %>
 <tr>
-<td align=”center” width=”300px”><a href=party/<%= room.id %>><%= room.name %></a></td>
+<td align=”center” width=”300px”><%= link_to h(room.name), :action => 'party', :id => room %></td>
 <td><%= room.created_at %></td>
 </tr>
 <% end %>

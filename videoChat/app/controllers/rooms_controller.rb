@@ -14,7 +14,7 @@ class RoomsController < ApplicationController
 
     respond_to do |format|
       if @new_room.save
-        format.html { redirect_to('/videoChat/party/' + @new_room.id.to_s)}
+        format.html { redirect_to('/videoChat/party/' + @new_room.id.to_s + '-'+ @new_room.name)}
       else
         format.html { render :controller => ‘rooms’, :action => “index” }
       end
