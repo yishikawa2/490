@@ -1,28 +1,46 @@
-<div id=”newRoom”>
-<fieldset>
-<legend>Start a new party room</legend>
-<%= form_for(@new_room) do |f| %>
-Party Name: <%= f.text_field :name %><br/><br/>
-Public? <%= f.check_box :public %><br/><br/>
+<head>
+  <meta charset="UTF-8">
+  <title>Video Chat</title>
+  <style>
+  .field input {
+    color: black;
+    font-weight: bold;
+    font-size: 24px;
+    padding: 10px;
+    border: 2px solid black;
+    border-radius:2px;
+  };
+  </style>
+</head>
 
-<%= f.submit %>
-<% end %>
-</fieldset>
-</div>
-
-<fieldset>
-<legend>Existing party rooms</legend>
-<table cellpadding=”2″ cellspacing=”5″>
-<tr>
-<th>Name</th>
-<th>Started</th>
-</tr>
-
-<% @rooms.each do |room| %>
-<tr>
-<td align=”center” width=”300px”><%= link_to h(room.name), :action => 'party', :id => room %></td>
-<td><%= room.created_at %></td>
-</tr>
-<% end %>
-</table>
-</fieldset>
+<body>
+  <div id="welcome", style="display: inline-block;position:fixed; top:0;bottom:600px;left:100px;right:0;width:600px;height:100px;margin:auto;">
+    <h1><font size="7">Welcome to VCHAT</font><h1>
+  </div>
+  <div id="newRoom", style="display: inline-block;position:fixed; top:0;bottom:100px;left:0;right:0;width:700px;height:200px;margin:auto;background-color:white;opacity:0.8">
+    <% if notice != nil %>
+      <p id="notice", align="center"><%= notice.html_safe %></p>
+    <% end %>
+    <font size="7">New party room</font><br><br><br>
+    <%= form_for(@new_room) do |f| %>
+      <div class="field">
+        <font size="6">Party Name: </font><%= f.text_field :name, :placeholder => "Enter a room name" %>
+        <%= f.submit "Create" %>
+      </div>
+    <% end %>
+  </div>
+  <br>
+  <div id="partyRoom", style="display: inline-block;position:fixed; top:500px;bottom:0;left:0;right:0;width:700px;height:200px;margin:auto;background-color:white;opacity:0.8">
+    <font size="6">Existing party rooms</font><br><br>
+    <% if @rooms != nil %>
+      <% @count=0 %>
+      <% @rooms.each do |room| %>
+        <font size="5"><%= link_to h(room.name), :action => 'party', :id => room %></font>
+        <%@count += 1%>
+      <% end %>
+    <% end %>
+    <% if @count == 0 %> 
+      <p style="text-align:center;"><br><br><font size="5">NO ROOM</font></p>
+    <% end %>
+  </div>
+</body>

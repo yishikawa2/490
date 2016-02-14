@@ -2,7 +2,7 @@ class RoomsController < ApplicationController
   before_filter :config_opentok,:except => [:index]
 
   def index
-    @rooms = Room.where(:public => true).order("created_at DESC")
+    @rooms = Room.all
     @new_room = Room.new
   end
 
@@ -14,9 +14,9 @@ class RoomsController < ApplicationController
 
     respond_to do |format|
       if @new_room.save
-        format.html { redirect_to('/videoChat/party/' + @new_room.id.to_s + '-'+ @new_room.name)}
+        format.html { redirect_to('/videoChat/party/' + @new_room.id.to_s + '-'+ @new_room.name) }
       else
-        format.html { render :controller => ‘rooms’, :action => “index” }
+        format.html { redirect_to root_path, notice: '<font color="red">Party name was blank! Try again.</font>' }
       end
     end
   end
