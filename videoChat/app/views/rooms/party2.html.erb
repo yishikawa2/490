@@ -1,5 +1,4 @@
 <head>
-  <meta charset="UTF-8">
   <title><%= @room.name %></title>
 
   <script src='//static.opentok.com/v2/js/opentok.min.js'></script>
@@ -8,11 +7,26 @@
     var sessionId = "<%= @room.sessionId %>";
     var token = "<%= @tok_token %>";
         
-    OT.setLogLevel(OT.DEBUG);
     var session = OT.initSession(apiKey, sessionId);
     session.addEventListener('sessionConnected', sessionConnectedHandler);
     session.addEventListener('streamCreated', streamCreatedHandler);
     session.connect(token);
+    session.signal(
+    {
+      data:"hello"
+    },
+    function(error) {
+      if (error) {
+        alert("signal error (" + error.code + "): " + error.message);
+      } 
+      else {
+        alert("signal sent.");
+      }
+    });
+    session.on("signal", function(event) {
+      alert("Signal sent from connection " + event.from.id);
+      // Process the event.data property, if there is any data.
+    });
 
     function sessionConnectedHandler(event) {
       var publisher = OT.initPublisher('publisher', {width:400, height:300});
@@ -65,17 +79,7 @@
 </head>
 
 <body>  
-  <div id="invitation", style="text-align:center;">
-    <font size="14">
-      Invite your friends! Share the URL of this page<br>
-      <font color="red">
-      <b>https://bikkun.com/videoChat/party/<%= @room.id %></b>
-      </font>
-    </font>
-  </div>
-
-  <br>
-  <div id='videoBox', style='position:absolute; top:200px;left:250px;'>
+  <div id='videoBox', style='display: inline-block; position:absolute; top:0;bottom: 0;left:0;right:0;width:800px;height:600px;margin:auto;'>
     <div id='publisher', style='float:left'>
     </div>
   </div>

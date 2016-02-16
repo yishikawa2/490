@@ -1,6 +1,17 @@
 <head>
   <title><%= @room.name %></title>
 
+  <script>
+    $(document).ready(function(){
+      $("#chatButton").click(function(){
+        $("#textChat").fadeToggle()
+        {
+        }
+      });
+    });
+  </script>
+
+
   <script src='//static.opentok.com/v2/js/opentok.min.js'></script>
   <script>
     var apiKey =  "<%= @apiKey %>";
@@ -8,11 +19,22 @@
     var token = "<%= @tok_token %>";
         
     var session = OT.initSession(apiKey, sessionId);
-    session.addEventListener('sessionConnected', sessionConnectedHandler);
-    session.addEventListener('streamCreated', streamCreatedHandler);
-    session.connect(token);
-
-    function sessionConnectedHandler(event) {
+    session.connect(token, function(error){
+      session.signal(
+        {
+          data:"hello"
+        },
+        function(error) {
+        if (error) {
+          alert("signal error (" + error.code + "): " + error.message);
+        } 
+        else {
+          alert("signal sent.");
+        }
+      }
+      );
+    });
+    session.on("sessionConnected", function sessionConnectedHandler(event) {
       var publisher = OT.initPublisher('publisher', {width:400, height:300});
       session.publish(publisher);
       //screenshare();
@@ -23,16 +45,28 @@
           subscribeToStreams(event.streams[i]);
         }
       }
-    }
-
-    function streamCreatedHandler(event) {
+    });
+    session.on("sessionDisconnected", function(event){
+      alert("The session disconnected. " + event.reason);
+    });
+    session.on("streamCreated", function streamCreatedHandler(event) {
       for (var i = 0; i < event.streams.length; i++) {
         if (event.streams[i].connection.connectionId != session.connection.connectionId) 
         {
           subscribeToStreams(event.streams[i]);
         }
       }
-    }
+    });
+    session.on("streamDestroyed", function(event){
+      alert("Stream " + event.stream.name + " ended. " + event.reason);
+    });
+
+    session.on("connectionCreated", function(event){
+      
+    });
+    session.on("signal", function(event) {
+      alert("Signal sent from connection " + event.from.id + " " + event.data);
+    });
 
     function subscribeToStreams(stream) {
       var div = document.createElement('div');
@@ -63,8 +97,22 @@
 </head>
 
 <body>  
-  <div id='videoBox', style='display: inline-block; position:fixed; top:0;bottom: 0;left:0;right:0;width:800px;height:600px;margin:auto;'>
+  <div id='videoBox', style='display: inline-block; position:absolute; top:0;bottom: 0;left:0;right:0;width:800px;height:600px;margin:auto;'>
     <div id='publisher', style='float:left'>
     </div>
   </div>
+  
+  <div id="textChat", style='display:none; position:fixed;right:0px;top:0px;bottom:0px;width:20%;height:100%;background-color:white;'>
+    
+  </div>
+  <div id="options", style='display: inline-block;position:fixed;left:0px;top:0px;bottom:0px;width:5%;height:100%;background-color:black;opacity:0.9;margin:auto;'>  
+    <input type="image" src="<%= asset_path 'copy-link.jpg' %>" alt="submit" width="50px" height="50px" onclick="copyToClipboard('https://bikkun.com/videoChat/party/<%=@room.id%>-<%=@room.name%>')">
+    <script>
+      function copyToClipboard(text){
+        window.prompt("Copy to Clipboard: Ctrl+C,Enter", text)
+      }
+    </script>
+    <input id="chatButton" type="image" src= "<%= asset_path 'text.jpg' %>" alt="submit" width="50px" height="50px">
+  </div>
+
 </body>
