@@ -1,16 +1,6 @@
 <head>
+  
   <title><%= @room.name %></title>
-
-  <script>
-    $(document).ready(function(){
-      $("#chatButton").click(function(){
-        $("#textChat").fadeToggle()
-        {
-        }
-      });
-    });
-  </script>
-
 
   <script src='//static.opentok.com/v2/js/opentok.min.js'></script>
   <script>
@@ -19,23 +9,11 @@
     var token = "<%= @tok_token %>";
         
     var session = OT.initSession(apiKey, sessionId);
-    session.connect(token, function(error){
-      session.signal(
-        {
-          data:"hello"
-        },
-        function(error) {
-        if (error) {
-          alert("signal error (" + error.code + "): " + error.message);
-        } 
-        else {
-          alert("signal sent.");
-        }
-      }
-      );
-    });
+    var publisher;
+    var subscribers = [];
+    session.connect(token);
     session.on("sessionConnected", function sessionConnectedHandler(event) {
-      var publisher = OT.initPublisher('publisher', {width:400, height:300});
+      publisher = OT.initPublisher('publisher', {width:400, height:300});
       session.publish(publisher);
       //screenshare();
 
@@ -58,14 +36,21 @@
       }
     });
     session.on("streamDestroyed", function(event){
-      alert("Stream " + event.stream.name + " ended. " + event.reason);
+      for (var i = 0; i < subscribers.length; i++ ){
+        if(event.stream.streamId == subscribers[i].streamId){
+           subscribers.splice(subscribers[i], 1);
+        }
+      }
     });
 
     session.on("connectionCreated", function(event){
       
     });
     session.on("signal", function(event) {
-      alert("Signal sent from connection " + event.from.id + " " + event.data);
+      var p = document.createElement('p');
+      var text = document.createTextNode(event.data)
+      p.appendChild(text);
+      $('#chat').append(p);
     });
 
     function subscribeToStreams(stream) {
@@ -73,7 +58,8 @@
       div.setAttribute('id', 'stream' + stream.streamId);
       div.style.float = "left";
       $('#videoBox').append(div);
-      session.subscribe(stream, div.id, {width:400, height:300});
+      var subscriber = session.subscribe(stream, div.id, {width:400, height:300});
+      subscribers.push(subscriber);
     }
 
     function screenshare() {
@@ -93,25 +79,123 @@
         }
       });
     }
+
+    function resizePublisher() {
+      if ($("#textChat").is(":visible")){
+        publisher.element.style.width = "300px";
+        publisher.element.style.height = "200px";
+      }
+      else{
+        publisher.element.style.width = "400px";
+        publisher.element.style.height = "300px";
+      }
+    }
+
+    function resizeSubscribers(){
+        for (var i = 0; i < subscribers.length; i++){
+          if ($("#textChat").is(":visible")){
+            subscribers[i].element.style.width = "300px";
+            subscribers[i].element.style.height = "200px";
+          }
+          else{
+            subscribers[i].element.style.width = "400px";
+            subscribers[i].element.style.height = "300px";
+          }
+        }
+    }
+    
+    function sendSignal(){
+      var txt = document.getElementById("text").value;
+      if (txt != ""){
+        session.signal(
+          {
+            data:txt
+          },
+          function(error) {
+            if (error) {
+              alert("signal error (" + error.code + "): " + error.message);
+            } 
+            document.getElementById("text").value = "";
+          }
+        );
+      }
+    }
+
+    $(document).ready(function(){
+      $("#chatButton").click(function(){
+        $("#textChat").fadeToggle('slow', function(){
+            resizePublisher();
+            if (subscribers.length > 0){
+              resizeSubscribers();
+            }
+        });
+      });
+    });
+
+    function copyToClipboard(text){
+      window.prompt("Copy to Clipboard: Ctrl+C,Enter", text)
+    }
   </script>
+
+  <style>
+    #chatInput {
+      position:absolute; 
+      top:85%;
+      bottom: 0;
+      left:0;
+      right:0;
+      margin:auto;
+      width:100%;
+      height:10%;
+    }
+    input[type="text"]
+    {
+      color: black;
+      font-weight: bold;
+      font-size: 24px;
+      padding: 5px;
+      border: 2px solid black;
+      border-radius:2px;
+      position:absolute;
+      top:0;
+      bottom: 0;
+      left:5px;
+      right:0;
+      margin:auto;
+      width:80%%;
+      height:100%;
+    }
+    button[type="submit"]
+    {
+      position:absolute;
+      top:0;
+      bottom:0;
+      left:85%;
+      right:0;
+      margin:auto;
+      width:10%%;
+      height:100%;
+    }
+  </style>
 </head>
 
 <body>  
-  <div id='videoBox', style='display: inline-block; position:absolute; top:0;bottom: 0;left:0;right:0;width:800px;height:600px;margin:auto;'>
+  <div id='videoBox', style='display: inline-block; position:absolute; top:50%;bottom: 0;left:0;right:0;width:800px;height:600px;margin:auto;'>
     <div id='publisher', style='float:left'>
     </div>
   </div>
   
-  <div id="textChat", style='display:none; position:fixed;right:0px;top:0px;bottom:0px;width:20%;height:100%;background-color:white;'>
-    
-  </div>
+  <div id="textChat", style='display:none; position:fixed;right:0px;top:0px;bottom:0px;width:30%;height:100%;background-color:white;'>
+    <h1 style="text-align:center;"><b>Text Chat</b></h1>
+    <div id="chat" style='position:fixed;right:0;top:10%;bottom:0;width:30%;height:75%;overflow-y:auto;'>
+    </div>
+    <div id="chatInput">
+      <input type="text"  id="text" placeholder= "Write here...">
+      <button type="submit" onclick="sendSignal()">Send</button>
+    </div>
+  </div>i
   <div id="options", style='display: inline-block;position:fixed;left:0px;top:0px;bottom:0px;width:5%;height:100%;background-color:black;opacity:0.9;margin:auto;'>  
     <input type="image" src="<%= asset_path 'copy-link.jpg' %>" alt="submit" width="50px" height="50px" onclick="copyToClipboard('https://bikkun.com/videoChat/party/<%=@room.id%>-<%=@room.name%>')">
-    <script>
-      function copyToClipboard(text){
-        window.prompt("Copy to Clipboard: Ctrl+C,Enter", text)
-      }
-    </script>
     <input id="chatButton" type="image" src= "<%= asset_path 'text.jpg' %>" alt="submit" width="50px" height="50px">
   </div>
 
