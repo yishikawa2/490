@@ -145,6 +145,12 @@
             }
         });
       });
+     
+      $("#text").keyup(function(event){
+        if(event.keyCode==13){
+          $("#submit").click();
+        }
+      }); 
     });
 
     function copyToClipboard(text){
@@ -233,7 +239,7 @@
     </div>
     <div id="chatInput">
       <input type="text"  id="text" placeholder= "Write here...">
-      <button type="submit" onclick="sendSignal()">Send</button>
+      <button type="submit" id="submit" onclick="sendSignal()">Send</button>
     </div>
   </div>
   <div id="options", style='display: inline-block;position:fixed;left:0px;top:0px;bottom:0px;width:5%;height:100%;background-color:black;opacity:0.9;margin:auto;'>  
