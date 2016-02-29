@@ -1,5 +1,4 @@
 <head>
-  
   <title><%= @room.name %></title>
 
   <script src='//static.opentok.com/v2/js/opentok.min.js'></script>
@@ -13,7 +12,11 @@
     var subscribers = [];
     session.connect(token);
     session.on("sessionConnected", function sessionConnectedHandler(event) {
-      publisher = OT.initPublisher('publisher', {width:400, height:300});
+      var userName = ""
+      while (!userName.match(/[a-zA-Z0-9_-]+/)){
+        userName = window.prompt("Enter Your Name:")
+      }
+      publisher = OT.initPublisher('publisher', {name:userName, width:400, height:300});
       session.publish(publisher);
       //screenshare();
 
@@ -154,7 +157,15 @@
     });
 
     function copyToClipboard(text){
-      window.prompt("Copy to Clipboard: Ctrl+C,Enter", text)
+      var copyDiv = document.createElement('div');
+      copyDiv.contentEditable = true;
+      document.body.appendChild(copyDiv);
+      copyDiv.innerHTML = text;
+      copyDiv.unselectable = "off";
+      copyDiv.focus();
+      document.execCommand('SelectAll');
+      document.execCommand("Copy", false, null);
+      document.body.removeChild(copyDiv);
     }
   </script>
 
@@ -179,10 +190,10 @@
       border-radius:2px;
       position:absolute;
       top:0;
-      bottom: 0;
+      bottom:0;
       left:0;
       right:0;
-      width:90%;
+      width:80%;
       height:100%;
     }
     button[type="submit"]
@@ -190,9 +201,9 @@
       position:absolute;
       top:0;
       bottom:0;
-      left:90%;
+      left:80%;
       right:0;
-      width:10%;
+      width:20%;
       height:100%;
     }
     p.speech
