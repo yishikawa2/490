@@ -24,9 +24,11 @@
         }
       }
     });
+
     session.on("sessionDisconnected", function(event){
       alert("The session disconnected. " + event.reason);
     });
+
     session.on("streamCreated", function streamCreatedHandler(event) {
       for (var i = 0; i < event.streams.length; i++) {
         if (event.streams[i].connection.connectionId != session.connection.connectionId) 
@@ -35,6 +37,7 @@
         }
       }
     });
+
     session.on("streamDestroyed", function(event){
       for (var i = 0; i < subscribers.length; i++ ){
         if(event.stream.streamId == subscribers[i].streamId){
@@ -46,11 +49,15 @@
     session.on("connectionCreated", function(event){
       
     });
+
     session.on("signal", function(event) {
       var p = document.createElement('p');
       var text = document.createTextNode(event.data)
+      p.setAttribute('class', 'speech')
       p.appendChild(text);
+      p.style.fontSize = "xx-large"
       $('#chat').append(p);
+      $('#chat').append('<br>');
     });
 
     function subscribeToStreams(stream) {
@@ -58,7 +65,13 @@
       div.setAttribute('id', 'stream' + stream.streamId);
       div.style.float = "left";
       $('#videoBox').append(div);
-      var subscriber = session.subscribe(stream, div.id, {width:400, height:300});
+      var subscriber;
+      if ($("#textChat").is(":visible")){
+        subscriber = session.subscribe(stream, div.id, {width:300, height:200});
+      }
+      else{
+        subscriber = session.subscribe(stream, div.id, {width:400, height:300});
+      }
       subscribers.push(subscriber);
     }
 
@@ -114,8 +127,10 @@
           function(error) {
             if (error) {
               alert("signal error (" + error.code + "): " + error.message);
-            } 
-            document.getElementById("text").value = "";
+            }
+            else{
+              document.getElementById("text").value = "";
+            }
           }
         );
       }
@@ -140,7 +155,7 @@
   <style>
     #chatInput {
       position:absolute; 
-      top:85%;
+      top:90%;
       bottom: 0;
       left:0;
       right:0;
@@ -159,10 +174,9 @@
       position:absolute;
       top:0;
       bottom: 0;
-      left:5px;
+      left:0;
       right:0;
-      margin:auto;
-      width:80%%;
+      width:90%;
       height:100%;
     }
     button[type="submit"]
@@ -170,33 +184,61 @@
       position:absolute;
       top:0;
       bottom:0;
-      left:85%;
+      left:90%;
       right:0;
-      margin:auto;
-      width:10%%;
+      width:10%;
       height:100%;
     }
+    p.speech
+    {
+      position: relative;
+      width: 200px;
+      height: 100px;
+      text-align: center;
+      line-height: 100px;
+      background-color: #fff;
+      border: 8px solid #666;
+      -webkit-border-radius: 30px;
+      -moz-border-radius: 30px;
+      border-radius: 30px;
+      -webkit-box-shadow: 2px 2px 4px #888;
+      -moz-box-shadow: 2px 2px 4px #888;
+      box-shadow: 2px 2px 4px #888;
+    }
+    p.speech:before
+{
+	content: ' ';
+	position: absolute;
+	width: 0;
+	height: 0;
+	left: 30px;
+	top: 100px;
+	border: 25px solid;
+	border-color: #666 transparent transparent #666;
+}
   </style>
 </head>
 
 <body>  
-  <div id='videoBox', style='display: inline-block; position:absolute; top:50%;bottom: 0;left:0;right:0;width:800px;height:600px;margin:auto;'>
+  <div id='videoBox', style='display: inline-block; position:absolute; top:0;bottom: 0;left:0;right:0;width:800px;height:600px;margin:auto;'>
     <div id='publisher', style='float:left'>
     </div>
   </div>
   
-  <div id="textChat", style='display:none; position:fixed;right:0px;top:0px;bottom:0px;width:30%;height:100%;background-color:white;'>
-    <h1 style="text-align:center;"><b>Text Chat</b></h1>
-    <div id="chat" style='position:fixed;right:0;top:10%;bottom:0;width:30%;height:75%;overflow-y:auto;'>
+  <div id="textChat", style='display:none; position:absolute;right:0px;top:0px;bottom:0px;width:30%;height:100%;background-color:gray;'>
+    <div id="text-head" style="position:absolute;right:0;top:0%;bottom:0;width:100%;height:15%;background-color:black;">
+      <h1 style="text-align:center; color:white"><b>Text Chat</b></h1>
+    </div>
+    <div id="chat" style='position:absolute;right:0;top:15%;bottom:0;width:100%;height:75%;overflow-y:auto;background-color:white;'>
     </div>
     <div id="chatInput">
       <input type="text"  id="text" placeholder= "Write here...">
       <button type="submit" onclick="sendSignal()">Send</button>
     </div>
-  </div>i
+  </div>
   <div id="options", style='display: inline-block;position:fixed;left:0px;top:0px;bottom:0px;width:5%;height:100%;background-color:black;opacity:0.9;margin:auto;'>  
-    <input type="image" src="<%= asset_path 'copy-link.jpg' %>" alt="submit" width="50px" height="50px" onclick="copyToClipboard('https://bikkun.com/videoChat/party/<%=@room.id%>-<%=@room.name%>')">
-    <input id="chatButton" type="image" src= "<%= asset_path 'text.jpg' %>" alt="submit" width="50px" height="50px">
+    <input type="image" src="<%= asset_path 'copy-link.jpg' %>" alt="submit" width="100%" height="5%" onclick="copyToClipboard('https://bikkun.com/videoChat/party/<%=@room.id%>-<%=@room.name%>')">
+    <input id="chatButton" type="image" src= "<%= asset_path 'text.jpg' %>" alt="submit" width="100%" height="5%">
   </div>
 
 </body>
