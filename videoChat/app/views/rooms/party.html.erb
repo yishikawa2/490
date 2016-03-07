@@ -10,6 +10,8 @@
     var session = OT.initSession(apiKey, sessionId);
     var publisher;
     var subscribers = [];
+    var connectionObjects = [];
+    var streamObjects = [];
     session.connect(token);
     session.on("sessionConnected", function sessionConnectedHandler(event) {
       var userName = ""
@@ -19,7 +21,7 @@
       publisher = OT.initPublisher('publisher', {name:userName, width:400, height:300});
       session.publish(publisher);
       //screenshare();
-
+  
       for (var i = 0; i < event.streams.length; i++) {
         if (event.streams[i].connection.connectionId != session.connection.connectionId) 
         {
@@ -39,18 +41,131 @@
           subscribeToStreams(event.streams[i]);
         }
       }
+
+      streamObjects.push(event);
+      var div = document.createElement('div');
+      var button = document.createElement('button');
+      div.setAttribute('id', 'textChat' + event.stream.name);
+      div.style.display= "none";
+      div.style.position = "absolute";
+      div.style.right = "0px";
+      div.style.top = "0px";
+      div.style.bottom = "0px";
+      div.style.width = "30%";
+      div.style.height = "100%";
+      div.style.backgroundColor = "gray";
+      
+      var head = document.createElement('div');
+      var title = document.createElement('h1');
+      var b = document.createElement('b');
+      var chatBox = document.createElement('div');
+      var inputDiv = document.createElement('div');
+      var input = document.createElement('input');
+      var textButton = document.createElement('button');
+      var connection1;
+      var connection2;
+      var buttonName;
+      var headName;
+
+      for(var i = 0; i < connectionObjects.length; i++){
+        if(connectionObjects[i].connection.connectionId  == session.connection.connectionId){
+          connection1 = connectionObjects[i];
+        }
+        else if(connectionObjects[i].connection.connectionId == event.stream.connection.connectionId){
+          connection2 = connectionObjects[i];
+        }
+      }
+      inputDiv.setAttribute('id', 'chatInput');
+      input.setAttribute('id', 'text' + event.stream.name);
+      input.setAttribute('type', 'text');
+      input.setAttribute('placeholder', 'Write here...');
+      textButton.setAttribute('id', 'submit'+event.stream.name);
+      textButton.setAttribute('class', 'submit');
+      textButton.setAttribute('type', 'submit');
+      textButton.onclick =  function(){
+        var txt = document.getElementById("text" + event.stream.name).value;
+        if (txt != ""){
+          session.signal(
+          {
+            to:connection2.connection,
+            data:txt
+          },
+          function(error) {
+            if (error) {
+              alert("signal error (" + error.code + "): " + error.message);
+            }
+            else{
+              document.getElementById("text").value = "";
+            }
+          }
+          );
+        }
+      };
+      buttonName = "Send";
+      textButton.appendChild(document.createTextNode(buttonName));
+      inputDiv.appendChild(input);
+      inputDiv.appendChild(textButton);
+      div.appendChild(inputDiv);
+
+      chatBox.setAttribute('id', 'chat');
+      chatBox.style.position = "absolute";
+      chatBox.style.top = "15%";
+      chatBox.style.width = "100%";
+      chatBox.style.height = "75%";
+      chatBox.style.overflowY = "auto";
+      chatBox.style.backgroundColor = "white";
+      div.appendChild(chatBox);
+
+      head.setAttribute('id', 'text-head' + event.stream.name);
+      head.style.position = "absolute";
+      head.style.top = "0%";
+      head.style.width = "100%";
+      head.style.height = "15%";
+      head.style.backgroundColor = "black";
+      headName = "Text Chat with " + event.stream.name;
+      b.appendChild(document.createTextNode(headName));
+      title.style.textAlign = "center";
+      title.style.color = "white";
+      title.appendChild(b);
+      head.appendChild(title);
+      div.appendChild(head);
+
+      button.setAttribute('id', 'send' + event.stream.name);
+      button.setAttribute('type', 'submit');
+      buttonName = "Send to " + event.stream.name; 
+      button.appendChild(document.createTextNode(buttonName));
+      button.onclick = function(){
+        if ($("#textChat").is(":visible")){
+          $("#textChat").fadeToggle('fast');
+        }
+        for(var i = 0; i < streamObjects.length; i++){
+          if ($("#textChat"+streamObjects[i].stream.name).is(":visible") && streamObjects[i].stream.name != event.stream.name){
+            $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
+          }
+        }
+        $('#textChat' + event.stream.name).fadeToggle('slow', function(){
+          resizePublisher(event.stream.name);
+          if (subscribers.length > 0){
+            resizeSubscribers(event.stream.name);
+          }
+        });
+      };
+      document.body.appendChild(div);
+      $('#list').append('<br>');
+      $('#list').append(button);
     });
 
     session.on("streamDestroyed", function(event){
       for (var i = 0; i < subscribers.length; i++ ){
         if(event.stream.streamId == subscribers[i].streamId){
-           subscribers.splice(subscribers[i], 1);
+          subscribers.splice(subscribers[i], 1);
         }
       }
+      
     });
 
-    session.on("connectionCreated", function(event){
-      
+    session.on("connectionCreated", function(event){ 
+      connectionObjects.push(event);
     });
 
     session.on("signal", function(event) {
@@ -58,7 +173,7 @@
       var text = document.createTextNode(event.data)
       p.setAttribute('class', 'speech')
       p.appendChild(text);
-      p.style.fontSize = "xx-large"
+      p.style.fontSize = "xx-large";
       $('#chat').append(p);
       $('#chat').append('<br>');
     });
@@ -69,8 +184,17 @@
       div.style.float = "left";
       $('#videoBox').append(div);
       var subscriber;
+      var check = true;
+      for(var i = 0; i < streamObjects.length; i++){
+        if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
+          check = false;
+        }
+      }
       if ($("#textChat").is(":visible")){
-        subscriber = session.subscribe(stream, div.id, {width:300, height:200});
+        check = false;
+      }
+      if(check == false){
+        subscriber = session.subscribe(stream, div.id, {width:300, height:200}); 
       }
       else{
         subscriber = session.subscribe(stream, div.id, {width:400, height:300});
@@ -96,8 +220,18 @@
       });
     }
 
-    function resizePublisher() {
+    function resizePublisher(name) {
+      var check = true;
+      for(var i = 0; i < streamObjects.length; i++){
+        if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
+          check = false;
+        }
+      }
       if ($("#textChat").is(":visible")){
+        check = false;
+      }
+
+      if (check == false){
         publisher.element.style.width = "300px";
         publisher.element.style.height = "200px";
       }
@@ -107,20 +241,29 @@
       }
     }
 
-    function resizeSubscribers(){
-        for (var i = 0; i < subscribers.length; i++){
-          if ($("#textChat").is(":visible")){
-            subscribers[i].element.style.width = "300px";
-            subscribers[i].element.style.height = "200px";
-          }
-          else{
-            subscribers[i].element.style.width = "400px";
-            subscribers[i].element.style.height = "300px";
-          }
+    function resizeSubscribers(name){
+      var check = true;
+      for(var i = 0; i < streamObjects.length; i++){
+        if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
+          check = false;
         }
+      }
+      if ($("#textChat").is(":visible")){
+        check = false;
+      }
+      for (var i = 0; i < subscribers.length; i++){
+        if (check === false){
+          subscribers[i].element.style.width = "300px";
+          subscribers[i].element.style.height = "200px";
+        }
+        else{
+          subscribers[i].element.style.width = "400px";
+          subscribers[i].element.style.height = "300px";
+        }
+      }
     }
     
-    function sendSignal(){
+    function sendSignalToAll(){
       var txt = document.getElementById("text").value;
       if (txt != ""){
         session.signal(
@@ -138,15 +281,24 @@
         );
       }
     }
+    
+    function showTextChatForAll(){  
+      for(var i = 0; i < streamObjects.length; i++){
+        if ($("#textChat"+streamObjects[i].stream.name).is(":visible")){
+          $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
+        }
+      }
+      $("#textChat").fadeToggle('slow', function(){
+        resizePublisher("textChat");
+        if (subscribers.length > 0){
+          resizeSubscribers("textChat");
+        }
+      });
+    }
 
     $(document).ready(function(){
       $("#chatButton").click(function(){
-        $("#textChat").fadeToggle('slow', function(){
-            resizePublisher();
-            if (subscribers.length > 0){
-              resizeSubscribers();
-            }
-        });
+          $("#list").fadeToggle('slow');
       });
      
       $("#text").keyup(function(event){
@@ -194,9 +346,9 @@
       left:0;
       right:0;
       width:80%;
-      height:100%;
+      height:85%;
     }
-    button[type="submit"]
+    button[class="submit"]
     {
       position:absolute;
       top:0;
@@ -242,7 +394,7 @@
     </div>
   </div>
   
-  <div id="textChat", style='display:none; position:absolute;right:0px;top:0px;bottom:0px;width:30%;height:100%;background-color:gray;'>
+  <div id="textChat", style='display:none;position:absolute;right:0px;top:0px;bottom:0px;width:30%;height:100%;background-color:gray;'>
     <div id="text-head" style="position:absolute;right:0;top:0%;bottom:0;width:100%;height:15%;background-color:black;">
       <h1 style="text-align:center; color:white"><b>Text Chat</b></h1>
     </div>
@@ -250,12 +402,15 @@
     </div>
     <div id="chatInput">
       <input type="text"  id="text" placeholder= "Write here...">
-      <button type="submit" id="submit" onclick="sendSignal()">Send</button>
+      <button type="submit" id="submit" class="submit" onclick="sendSignalToAll()">Send</button>
     </div>
   </div>
-  <div id="options", style='display: inline-block;position:fixed;left:0px;top:0px;bottom:0px;width:5%;height:100%;background-color:black;opacity:0.9;margin:auto;'>  
-    <input type="image" src="<%= asset_path 'copy-link.jpg' %>" alt="submit" width="100%" height="5%" onclick="copyToClipboard('https://bikkun.com/videoChat/party/<%=@room.id%>-<%=@room.name%>')">
-    <input id="chatButton" type="image" src= "<%= asset_path 'text.jpg' %>" alt="submit" width="100%" height="5%">
+  <div id="options", style='display:inline-block;position:fixed;left:0px;top:0px;bottom:0px;width:5%;height:100%;background-color:black;opacity:0.9;margin:auto;'>  
+    <input type="image" title="Copy URL" src="<%= asset_path 'copy-link.jpg' %>" alt="submit" width="100%" height="5%" onclick="copyToClipboard('https://bikkun.com/videoChat/party/<%=@room.id%>-<%=@room.name%>')">
+    <input id="chatButton" title="Text Chet" type="image" src= "<%= asset_path 'text.jpg' %>" alt="submit" width="100%" height="5%">
+  </div>
+  <div id="list", style="display:none;position:absolute; top:0;bottom:0;left:5%;width:8%;height:20%;background-color:gray">
+      <button type="submit" id="sendAll" onclick="showTextChatForAll()">Send to All</button>
   </div>
 
 </body>
