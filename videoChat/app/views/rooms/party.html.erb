@@ -82,6 +82,11 @@
       input.setAttribute('id', 'text' + event.stream.name);
       input.setAttribute('type', 'text');
       input.setAttribute('placeholder', 'Write here...');
+      input.onkeyup = function(e){
+        if(e.keyCode == 13){
+          $("#submit"+name1).click();
+        }
+      };
       textButton.setAttribute('id', 'submit'+event.stream.name);
       textButton.setAttribute('class', 'submit');
       textButton.setAttribute('type', 'submit');
@@ -116,6 +121,7 @@
           document.getElementById("text"+event.stream.name).value = "";
         }
       };
+      
       buttonName = "Send";
       textButton.appendChild(document.createTextNode(buttonName));
       inputDiv.appendChild(input);
