@@ -178,6 +178,10 @@
     });
 
     session.on("streamDestroyed", function(event){
+      var targetButton = document.getElementById("send" + event.stream.name); 
+      var targetDiv = document.getElementById("textChat" + event.stream.name);
+      targetDiv.remove();
+      targetButton.remove();
       for (var i = 0; i < subscribers.length; i++ ){
         if(event.stream.streamId == subscribers[i].streamId){
           subscribers.splice(subscribers[i], 1);
