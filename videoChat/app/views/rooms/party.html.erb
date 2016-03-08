@@ -12,9 +12,9 @@
     var subscribers = [];
     var connectionObjects = [];
     var streamObjects = [];
+    var userName = ""
     session.connect(token);
     session.on("sessionConnected", function sessionConnectedHandler(event) {
-      var userName = ""
       while (!userName.match(/[a-zA-Z0-9_-]+/)){
         userName = window.prompt("Enter Your Name:")
       }
@@ -64,6 +64,8 @@
       var textButton = document.createElement('button');
       var connection1;
       var connection2;
+      var name1 = event.stream.name;
+      var name2 = userName;
       var buttonName;
       var headName;
 
@@ -75,6 +77,7 @@
           connection2 = connectionObjects[i];
         }
       }
+      
       inputDiv.setAttribute('id', 'chatInput');
       input.setAttribute('id', 'text' + event.stream.name);
       input.setAttribute('type', 'text');
@@ -88,17 +91,29 @@
           session.signal(
           {
             to:connection2.connection,
-            data:txt
+            data:txt,
+            type:name2
           },
           function(error) {
             if (error) {
               alert("signal error (" + error.code + "): " + error.message);
             }
-            else{
-              document.getElementById("text").value = "";
+          }
+          );
+      
+          session.signal(
+          {
+            to:connection1.connection,
+            data:txt,
+            type:name1
+          },
+          function(error) {
+            if (error) {
+              alert("signal error (" + error.code + "): " + error.message);
             }
           }
           );
+          document.getElementById("text"+event.stream.name).value = "";
         }
       };
       buttonName = "Send";
@@ -107,7 +122,7 @@
       inputDiv.appendChild(textButton);
       div.appendChild(inputDiv);
 
-      chatBox.setAttribute('id', 'chat');
+      chatBox.setAttribute('id', 'chat' + event.stream.name);
       chatBox.style.position = "absolute";
       chatBox.style.top = "15%";
       chatBox.style.width = "100%";
@@ -144,11 +159,12 @@
           }
         }
         $('#textChat' + event.stream.name).fadeToggle('slow', function(){
-          resizePublisher(event.stream.name);
+          resizePublisher();
           if (subscribers.length > 0){
-            resizeSubscribers(event.stream.name);
+            resizeSubscribers();
           }
         });
+        $("#list").fadeToggle("slow");
       };
       document.body.appendChild(div);
       $('#list').append('<br>');
@@ -174,8 +190,49 @@
       p.setAttribute('class', 'speech')
       p.appendChild(text);
       p.style.fontSize = "xx-large";
-      $('#chat').append(p);
-      $('#chat').append('<br>');
+      if(event.type == "signal"){
+        $('#chat').append(p);
+        $('#chat').append('<br>');
+        for(var i = 0; i < streamObjects.length; i++){
+          if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
+            $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
+          }
+        }
+        if($("#textChat").is(":hidden")){
+          $("#textChat").fadeToggle("slow", function(){
+          resizePublisher();
+          if (subscribers.length > 0){
+            resizeSubscribers();
+          }
+        });
+        }
+      }
+      else{
+        var type = event.type;
+        var name = type.substring(7);
+        $('#chat'+name).append(p);
+        $('#chat'+name).append('<br>');
+        for(var i = 0; i < streamObjects.length; i++){
+          if(name == streamObjects[i].stream.name){
+            if($("#textChat"+streamObjects[i].stream.name).is(":hidden")){
+              $("#textChat"+streamObjects[i].stream.name).fadeToggle('slow', function(){
+                resizePublisher();
+                if (subscribers.length > 0){
+                  resizeSubscribers();
+                }
+              });
+            }
+          }
+          else{
+            if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
+              $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
+            }
+          }
+        }
+        if($("#textChat").is(":visible")){
+          $("#textChat").fadeToggle("fast");
+        }
+      }
     });
 
     function subscribeToStreams(stream) {
@@ -220,7 +277,7 @@
       });
     }
 
-    function resizePublisher(name) {
+    function resizePublisher() {
       var check = true;
       for(var i = 0; i < streamObjects.length; i++){
         if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
@@ -241,7 +298,7 @@
       }
     }
 
-    function resizeSubscribers(name){
+    function resizeSubscribers(){
       var check = true;
       for(var i = 0; i < streamObjects.length; i++){
         if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
@@ -289,11 +346,12 @@
         }
       }
       $("#textChat").fadeToggle('slow', function(){
-        resizePublisher("textChat");
+        resizePublisher();
         if (subscribers.length > 0){
-          resizeSubscribers("textChat");
+          resizeSubscribers();
         }
       });
+      $("#list").fadeToggle("slow");
     }
 
     $(document).ready(function(){
