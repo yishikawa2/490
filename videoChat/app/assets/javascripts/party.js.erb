@@ -1,385 +1,370 @@
-    var sessionId = window.sessionId;
-    var token = window.tok_token;
-    var apiKey = window.apiKey;
-    if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
-    var session = OT.initSession(apiKey, sessionId);
-    var publisher;
-    var subscribers = [];
-    var connectionObjects = [];
-    var streamObjects = [];
-    var userName = ""
-    session.connect(token);
-    session.on("sessionConnected", function sessionConnectedHandler(event) {
-      while (!userName.match(/[a-zA-Z0-9_-]+/)){
-        userName = window.prompt("Enter Your Name:")
-      }
-      publisher = OT.initPublisher('publisher', {name:userName, width:400, height:300});
-      session.publish(publisher);
-      //screenshare();
+var sessionId = window.sessionId;
+var token = window.tok_token;
+var apiKey = window.apiKey;
+if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
+  var session = OT.initSession(apiKey, sessionId);
+  var publisher;
+  var subscribers = [];
+  var connectionObjects = [];
+  var streamObjects = [];
+  var userName = ""
+   
+  session.connect(token);
   
-      for (var i = 0; i < event.streams.length; i++) {
-        if (event.streams[i].connection.connectionId != session.connection.connectionId) 
-        {
-          subscribeToStreams(event.streams[i]);
-        }
-      }
-    });
-
-    session.on("sessionDisconnected", function(event){
-      alert("The session disconnected. " + event.reason);
-    });
-
-    session.on("streamCreated", function streamCreatedHandler(event) {
-      for (var i = 0; i < event.streams.length; i++) {
-        if (event.streams[i].connection.connectionId != session.connection.connectionId) 
-        {
-          subscribeToStreams(event.streams[i]);
-        }
-      }
-
-      streamObjects.push(event);
-      var div = document.createElement('div');
-      var button = document.createElement('button');
-      div.setAttribute('id', 'textChat' + event.stream.name);
-      div.style.display= "none";
-      div.style.position = "absolute";
-      div.style.right = "0px";
-      div.style.top = "0px";
-      div.style.bottom = "0px";
-      div.style.width = "30%";
-      div.style.height = "100%";
-      div.style.backgroundColor = "gray";
-      
-      var head = document.createElement('div');
-      var title = document.createElement('h1');
-      var b = document.createElement('b');
-      var chatBox = document.createElement('div');
-      var inputDiv = document.createElement('div');
-      var input = document.createElement('input');
-      var textButton = document.createElement('button');
-      var connection1;
-      var connection2;
-      var name1 = event.stream.name;
-      var name2 = userName;
-      var buttonName;
-      var headName;
-
-      for(var i = 0; i < connectionObjects.length; i++){
-        if(connectionObjects[i].connection.connectionId  == session.connection.connectionId){
-          connection1 = connectionObjects[i];
-        }
-        else if(connectionObjects[i].connection.connectionId == event.stream.connection.connectionId){
-          connection2 = connectionObjects[i];
-        }
-      }
-      
-      inputDiv.setAttribute('id', 'chatInput');
-      input.setAttribute('id', 'text' + event.stream.name);
-      input.setAttribute('class', 'text');
-      input.setAttribute('type', 'text');
-      input.setAttribute('placeholder', 'Write here...');
-      input.onkeyup = function(e){
-        if(e.keyCode == 13){
-          $("#submit"+name1).click();
-        }
-      };
-      textButton.setAttribute('id', 'submit'+event.stream.name);
-      textButton.setAttribute('class', 'submit');
-      textButton.setAttribute('type', 'submit');
-      textButton.onclick =  function(){
-        var txt = document.getElementById("text" + event.stream.name).value;
-        if (txt != ""){
-          session.signal(
-          {
-            to:connection2.connection,
-            data:txt,
-            type:name2
-          },
-          function(error) {
-            if (error) {
-              alert("signal error (" + error.code + "): " + error.message);
-            }
-          }
-          );
-      
-          session.signal(
-          {
-            to:connection1.connection,
-            data:txt,
-            type:name1
-          },
-          function(error) {
-            if (error) {
-              alert("signal error (" + error.code + "): " + error.message);
-            }
-          }
-          );
-          document.getElementById("text"+event.stream.name).value = "";
-        }
-      };
-      
-      buttonName = "Send";
-      textButton.appendChild(document.createTextNode(buttonName));
-      inputDiv.appendChild(input);
-      inputDiv.appendChild(textButton);
-      div.appendChild(inputDiv);
-
-      chatBox.setAttribute('id', 'chat' + event.stream.name);
-      chatBox.style.position = "absolute";
-      chatBox.style.top = "15%";
-      chatBox.style.width = "100%";
-      chatBox.style.height = "75%";
-      chatBox.style.overflowY = "auto";
-      chatBox.style.backgroundColor = "white";
-      div.appendChild(chatBox);
-
-      head.setAttribute('id', 'text-head' + event.stream.name);
-      head.style.position = "absolute";
-      head.style.top = "0%";
-      head.style.width = "100%";
-      head.style.height = "15%";
-      head.style.backgroundColor = "black";
-      headName = "Text Chat with " + event.stream.name;
-      b.appendChild(document.createTextNode(headName));
-      title.style.textAlign = "center";
-      title.style.color = "white";
-      title.appendChild(b);
-      head.appendChild(title);
-      div.appendChild(head);
-
-      button.setAttribute('id', 'send' + event.stream.name);
-      button.setAttribute('type', 'submit');
-      buttonName = "Send to " + event.stream.name; 
-      button.appendChild(document.createTextNode(buttonName));
-      button.appendChild(document.createElement("br"));
-      button.onclick = function(){
-        if ($("#textChat").is(":visible")){
-          $("#textChat").fadeToggle('fast');
-        }
-        for(var i = 0; i < streamObjects.length; i++){
-          if ($("#textChat"+streamObjects[i].stream.name).is(":visible") && streamObjects[i].stream.name != event.stream.name){
-            $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
-          }
-        }
-        $('#textChat' + event.stream.name).fadeToggle('slow', function(){
-          resizePublisher();
-          if (subscribers.length > 0){
-            resizeSubscribers();
-          }
-        });
-        $("#list").fadeToggle("slow");
-      };
-      document.body.appendChild(div);
-      $('#list').append(button);
-    });
-
-    session.on("streamDestroyed", function(event){
-      var targetButton = document.getElementById("send" + event.stream.name); 
-      var targetDiv = document.getElementById("textChat" + event.stream.name);
-      targetDiv.remove();
-      targetButton.remove();
-      for (var i = 0; i < subscribers.length; i++ ){
-        if(event.stream.streamId == subscribers[i].streamId){
-          subscribers.splice(subscribers[i], 1);
-        }
-      }
-      
-    });
-
-    session.on("connectionCreated", function(event){ 
-      connectionObjects.push(event);
-    });
-
-    session.on("signal", function(event) {
-      var p = document.createElement('p');
-      var text = document.createTextNode(event.data)
-      p.setAttribute('class', 'speech')
-      p.appendChild(text);
-      p.style.fontSize = "xx-large";
-      if(event.type == "signal"){
-        $('#chat').append(p);
-        $('#chat').append('<br>');
-        for(var i = 0; i < streamObjects.length; i++){
-          if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
-            $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
-          }
-        }
-        if($("#textChat").is(":hidden")){
-          $("#textChat").fadeToggle("slow", function(){
-          resizePublisher();
-          if (subscribers.length > 0){
-            resizeSubscribers();
-          }
-        });
-        }
-      }
-      else{
-        var type = event.type;
-        var name = type.substring(7);
-        $('#chat'+name).append(p);
-        $('#chat'+name).append('<br>');
-        for(var i = 0; i < streamObjects.length; i++){
-          if(name == streamObjects[i].stream.name){
-            if($("#textChat"+streamObjects[i].stream.name).is(":hidden")){
-              $("#textChat"+streamObjects[i].stream.name).fadeToggle('slow', function(){
-                resizePublisher();
-                if (subscribers.length > 0){
-                  resizeSubscribers();
-                }
-              });
-            }
-          }
-          else{
-            if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
-              $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
-            }
-          }
-        }
-        if($("#textChat").is(":visible")){
-          $("#textChat").fadeToggle("fast");
-        }
-      }
-    });
-}
-    function subscribeToStreams(stream) {
-      var div = document.createElement('div');
-      div.setAttribute('id', 'stream' + stream.streamId);
-      div.style.float = "left";
-      $('#videoBox').append(div);
-      var subscriber;
-      var check = true;
-      for(var i = 0; i < streamObjects.length; i++){
-        if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
-          check = false;
-        }
-      }
-      if ($("#textChat").is(":visible")){
-        check = false;
-      }
-      if(check == false){
-        subscriber = session.subscribe(stream, div.id, {width:300, height:200}); 
-      }
-      else{
-        subscriber = session.subscribe(stream, div.id, {width:400, height:300});
-      }
-      subscribers.push(subscriber);
+  session.on("sessionConnected", function sessionConnectedHandler(event) {
+    while (!userName.match(/[a-zA-Z0-9_-]+/)){
+      userName = window.prompt("Enter Your Name:")
     }
-
-    function screenshare() {
-      OT.checkScreenSharingCapability(function(response) {
-        if (!response.supported || response.extensionRegistered === false) {
-          alert('This browser does not support screen sharing.');
-        } else if (response.extensionInstalled === false) {
-          alert('Please install the screen sharing extension and load your app over https.');
-        } else {
-          // Screen sharing is available. Publish the screen.
-          var screenSharingPublisher = OT.initPublisher('screen-preview', {videoSource: 'screen'});
-          session.publish(screenSharingPublisher, function(error) {
-            if (error) {
-              alert('Could not share the screen: ' + error.message);
-            }
-          });
-        }
-      });
+    publisher = OT.initPublisher('publisher', {name:userName, width:400, height:300});
+    session.publish(publisher);
+    //screenshare();
+  
+    for (var i = 0; i < event.streams.length; i++) {
+      if (event.streams[i].connection.connectionId != session.connection.connectionId){
+        subscribeToStreams(event.streams[i]);
+      }
     }
+  });
 
-    function resizePublisher() {
-      var check = true;
-      for(var i = 0; i < streamObjects.length; i++){
-        if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
-          check = false;
-        }
-      }
-      if ($("#textChat").is(":visible")){
-        check = false;
-      }
+  session.on("sessionDisconnected", function(event){
+    alert("The session disconnected. " + event.reason);
+  });
 
-      if (check == false){
-        publisher.element.style.width = "300px";
-        publisher.element.style.height = "200px";
-      }
-      else{
-        publisher.element.style.width = "400px";
-        publisher.element.style.height = "300px";
+  session.on("streamCreated", function streamCreatedHandler(event) {
+    for (var i = 0; i < event.streams.length; i++) {
+      if (event.streams[i].connection.connectionId != session.connection.connectionId){
+        subscribeToStreams(event.streams[i]);
       }
     }
 
-    function resizeSubscribers(){
-      var check = true;
-      for(var i = 0; i < streamObjects.length; i++){
-        if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
-          check = false;
-        }
+    streamObjects.push(event);
+    var div = document.createElement('div');
+    var button = document.createElement('button');
+    div.setAttribute('id', 'textChat' + event.stream.name);
+    div.setAttribute('class', 'textChat');
+      
+    var head = document.createElement('div');
+    var title = document.createElement('h1');
+    var b = document.createElement('b');
+    var chatBox = document.createElement('div');
+    var inputDiv = document.createElement('div');
+    var input = document.createElement('input');
+    var textButton = document.createElement('button');
+    var connection1;
+    var connection2;
+    var name1 = event.stream.name;
+    var name2 = userName;
+    var buttonName;
+    var headName;
+
+    for(var i = 0; i < connectionObjects.length; i++){
+      if(connectionObjects[i].connection.connectionId  == session.connection.connectionId){
+        connection1 = connectionObjects[i];
       }
-      if ($("#textChat").is(":visible")){
-        check = false;
-      }
-      for (var i = 0; i < subscribers.length; i++){
-        if (check === false){
-          subscribers[i].element.style.width = "300px";
-          subscribers[i].element.style.height = "200px";
-        }
-        else{
-          subscribers[i].element.style.width = "400px";
-          subscribers[i].element.style.height = "300px";
-        }
+      else if(connectionObjects[i].connection.connectionId == event.stream.connection.connectionId){
+        connection2 = connectionObjects[i];
       }
     }
-    
-    function sendSignalToAll(){
-      var txt = document.getElementById("text").value;
+      
+    inputDiv.setAttribute('id', 'chatInput');
+    input.setAttribute('id', 'text' + event.stream.name);
+    input.setAttribute('class', 'text');
+    input.setAttribute('type', 'text');
+    input.setAttribute('placeholder', 'Write here...');
+    input.onkeyup = function(e){
+      if(e.keyCode == 13){
+        $("#submit"+name1).click();
+      }
+    };
+    textButton.setAttribute('id', 'submit'+event.stream.name);
+    textButton.setAttribute('class', 'submit');
+    textButton.setAttribute('type', 'submit');
+    textButton.onclick =  function(){
+      var txt = document.getElementById("text" + event.stream.name).value;
       if (txt != ""){
         session.signal(
-          {
-            data:txt
-          },
-          function(error) {
-            if (error) {
-              alert("signal error (" + error.code + "): " + error.message);
-            }
-            else{
-              document.getElementById("text").value = "";
-            }
+        {
+          to:connection2.connection,
+          data:txt,
+          type:name2
+        },
+        function(error) {
+          if (error) {
+            alert("signal error (" + error.code + "): " + error.message);
           }
+        }
         );
+      
+        session.signal(
+        {
+          to:connection1.connection,
+          data:txt,
+          type:name1
+        },
+        function(error) {
+          if (error) {
+            alert("signal error (" + error.code + "): " + error.message);
+          }
+        }
+        );
+        document.getElementById("text"+event.stream.name).value = "";
       }
-    }
-    
-    function showTextChatForAll(){  
+    };
+      
+    buttonName = "Send";
+    textButton.appendChild(document.createTextNode(buttonName));
+    inputDiv.appendChild(input);
+    inputDiv.appendChild(textButton);
+    div.appendChild(inputDiv);
+
+    chatBox.setAttribute('id', 'chat' + event.stream.name);
+    chatBox.setAttribute('class', 'chat');
+    div.appendChild(chatBox);
+
+    head.setAttribute('id', 'text-head' + event.stream.name);
+    head.setAttribute('class', 'text-head'); 
+    headName = "Text Chat with " + event.stream.name;
+    b.appendChild(document.createTextNode(headName));
+    title.style.textAlign = "center";
+    title.style.color = "white";
+    title.appendChild(b);
+    head.appendChild(title);
+    div.appendChild(head);
+
+    button.setAttribute('id', 'send' + event.stream.name);
+    button.setAttribute('type', 'submit');
+    buttonName = "Send to " + event.stream.name; 
+    button.appendChild(document.createTextNode(buttonName));
+    button.appendChild(document.createElement("br"));
+    button.onclick = function(){
+      if ($("#textChat").is(":visible")){
+        $("#textChat").fadeToggle('fast');
+      }
       for(var i = 0; i < streamObjects.length; i++){
-        if ($("#textChat"+streamObjects[i].stream.name).is(":visible")){
+        if ($("#textChat"+streamObjects[i].stream.name).is(":visible") && streamObjects[i].stream.name != event.stream.name){
           $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
         }
       }
-      $("#textChat").fadeToggle('slow', function(){
+      $('#textChat' + event.stream.name).fadeToggle('slow', function(){
         resizePublisher();
         if (subscribers.length > 0){
           resizeSubscribers();
         }
       });
       $("#list").fadeToggle("slow");
-    }
+    };
+    document.body.appendChild(div);
+    $('#list').append(button);
+  });
 
-    $(document).ready(function(){
-      $("#chatButton").click(function(){
-          $("#list").fadeToggle('slow');
-      });
-     
-      $("#text").keyup(function(event){
-        if(event.keyCode==13){
-          $("#submit").click();
+  session.on("streamDestroyed", function(event){
+    var targetButton = document.getElementById("send" + event.stream.name); 
+    var targetDiv = document.getElementById("textChat" + event.stream.name);
+    targetDiv.remove();
+    targetButton.remove();
+    for (var i = 0; i < subscribers.length; i++ ){
+      if(event.stream.streamId == subscribers[i].streamId){
+        subscribers.splice(subscribers[i], 1);
+      }
+    }    
+  });
+
+  session.on("connectionCreated", function(event){ 
+    connectionObjects.push(event);
+  });
+
+  session.on("signal", function(event) {
+    var p = document.createElement('p');
+    var text = document.createTextNode(event.data)
+    p.setAttribute('class', 'speech')
+    p.appendChild(text);
+    p.style.fontSize = "xx-large";
+    if(event.type == "signal"){
+      $('#chat').append(p);
+      $('#chat').append('<br>');
+      for(var i = 0; i < streamObjects.length; i++){
+        if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
+          $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
         }
-      }); 
-    });
-
-    function copyToClipboard(text){
-      var copyDiv = document.createElement('div');
-      copyDiv.contentEditable = true;
-      document.body.appendChild(copyDiv);
-      copyDiv.innerHTML = text;
-      copyDiv.unselectable = "off";
-      copyDiv.focus();
-      document.execCommand('SelectAll');
-      document.execCommand("Copy", false, null);
-      document.body.removeChild(copyDiv);
+      }
+      if($("#textChat").is(":hidden")){
+        $("#textChat").fadeToggle("slow", function(){
+          resizePublisher();
+          if (subscribers.length > 0){
+            resizeSubscribers();
+          }
+        });
+      }
     }
+    else{
+      var type = event.type;
+      var name = type.substring(7);
+      $('#chat'+name).append(p);
+      $('#chat'+name).append('<br>');
+      for(var i = 0; i < streamObjects.length; i++){
+        if(name == streamObjects[i].stream.name){
+          if($("#textChat"+streamObjects[i].stream.name).is(":hidden")){
+            $("#textChat"+streamObjects[i].stream.name).fadeToggle('slow', function(){
+              resizePublisher();
+              if (subscribers.length > 0){
+                resizeSubscribers();
+              }
+            });
+          }
+        }
+        else{
+          if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
+            $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
+          }
+        }
+      }
+      if($("#textChat").is(":visible")){
+        $("#textChat").fadeToggle("fast");
+      }
+    }
+  });
+}
+
+function subscribeToStreams(stream) {
+  var div = document.createElement('div');
+  div.setAttribute('id', 'stream' + stream.streamId);
+  div.style.float = "left";
+  $('#videoBox').append(div);
+  var subscriber;
+  var check = true;
+  for(var i = 0; i < streamObjects.length; i++){
+    if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
+      check = false;
+    }
+  }
+  if ($("#textChat").is(":visible")){
+    check = false;
+  }
+  if(check == false){
+    subscriber = session.subscribe(stream, div.id, {width:300, height:200}); 
+  }
+  else{
+    subscriber = session.subscribe(stream, div.id, {width:400, height:300});
+  }
+  subscribers.push(subscriber);
+}
+
+function screenshare() {
+  OT.checkScreenSharingCapability(function(response) {
+    if (!response.supported || response.extensionRegistered === false) {
+      alert('This browser does not support screen sharing.');
+    } 
+    else if (response.extensionInstalled === false) {
+      alert('Please install the screen sharing extension and load your app over https.');
+    }
+    else {
+      // Screen sharing is available. Publish the screen.
+      var screenSharingPublisher = OT.initPublisher('screen-preview', {videoSource: 'screen'});
+      session.publish(screenSharingPublisher, function(error) {
+        if (error) {
+          alert('Could not share the screen: ' + error.message);
+        }
+      });
+    }
+  });
+}
+
+function resizePublisher() {
+  var check = true;
+  for(var i = 0; i < streamObjects.length; i++){
+    if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
+      check = false;
+    }
+  }
+  if ($("#textChat").is(":visible")){
+    check = false;
+  }
+
+  if (check == false){
+    publisher.element.style.width = "300px";
+    publisher.element.style.height = "200px";
+  }
+  else{
+    publisher.element.style.width = "400px";
+    publisher.element.style.height = "300px";
+  }
+}
+
+function resizeSubscribers(){
+  var check = true;
+  for(var i = 0; i < streamObjects.length; i++){
+    if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
+      check = false;
+    }
+  }
+  if ($("#textChat").is(":visible")){
+    check = false;
+  }
+  for (var i = 0; i < subscribers.length; i++){
+    if (check === false){
+      subscribers[i].element.style.width = "300px";
+      subscribers[i].element.style.height = "200px";
+    }
+    else{
+      subscribers[i].element.style.width = "400px";
+      subscribers[i].element.style.height = "300px";
+    }
+  }
+}
+    
+function sendSignalToAll(){
+  var txt = document.getElementById("text").value;
+  if (txt != ""){
+    session.signal(
+    {
+      data:txt
+    },
+    function(error) {
+      if (error) {
+        alert("signal error (" + error.code + "): " + error.message);
+      }
+      else{
+        document.getElementById("text").value = "";
+      }
+    });
+  }
+}
+    
+function showTextChatForAll(){  
+  for(var i = 0; i < streamObjects.length; i++){
+    if ($("#textChat"+streamObjects[i].stream.name).is(":visible")){
+      $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
+    }
+  }
+  $("#textChat").fadeToggle('slow', function(){
+    resizePublisher();
+    if (subscribers.length > 0){
+      resizeSubscribers();
+    }
+  });
+  $("#list").fadeToggle("slow");
+}
+
+$(document).ready(function(){
+  $("#chatButton").click(function(){
+    $("#list").fadeToggle('slow');
+  });
+     
+  $("#text").keyup(function(event){
+    if(event.keyCode==13){
+      $("#submit").click();
+    }
+  }); 
+});
+
+function copyToClipboard(text){
+  var copyDiv = document.createElement('div');
+  copyDiv.contentEditable = true;
+  document.body.appendChild(copyDiv);
+  copyDiv.innerHTML = text;
+  copyDiv.unselectable = "off";
+  copyDiv.focus();
+  document.execCommand('SelectAll');
+  document.execCommand("Copy", false, null);
+  document.body.removeChild(copyDiv);
+}
