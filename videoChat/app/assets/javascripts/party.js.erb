@@ -171,6 +171,21 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
   });
 
   session.on("streamDestroyed", function(event){
+    connectionCount -= 1;
+    var remain = connectionCount%2;
+    var connectionNum;
+    if(remain == 0){
+      connectionNum = connectionCount;
+    }
+    else{
+      connectionNum = connectionCount + 1;
+    }
+    var num = 100/(connectionNum/2);
+    var numPer = num + "%";
+    for(var i=0; i < subscribers.length+1; i++){
+      subscribers[i].element.style.width = '50%';
+      subscribers[i].element.style.height = numPer;
+    }
     var targetButton = document.getElementById("send" + event.stream.name); 
     var targetDiv = document.getElementById("textChat" + event.stream.name);
     targetDiv.remove();
@@ -179,12 +194,33 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       if(event.stream.streamId == subscribers[i].streamId){
         subscribers.splice(subscribers[i], 1);
       }
-    }    
+    }
   });
 
   session.on("connectionCreated", function(event){ 
     connectionObjects.push(event);
     connectionCount += 1
+    if(connectionCount == 1){
+      publisher.element.style.width = "100%";
+      publisher.element.style.height = "100%";
+    }
+    else{
+      var remain = connectionCount%2;
+      var connectionNum;
+      if(remain == 0){
+        connectionNum = connectionCount;
+      }
+      else{
+        connectionNum = connectionCount + 1;
+      }
+      var num = 100/(connectionNum/2);
+      var numPer = num + "%";
+      publisher.element.style.width = "50%";
+      publisher.element.style.height = numPer;
+    }
+  });
+
+  session.on("connectionDestroyed", function(event){
     if(connectionCount == 1){
       publisher.element.style.width = "100%";
       publisher.element.style.height = "100%";
