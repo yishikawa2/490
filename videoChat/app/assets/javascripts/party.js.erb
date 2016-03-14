@@ -8,6 +8,7 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
   var connectionObjects = [];
   var streamObjects = [];
   var userName = ""
+  var connectionCount = 0;
    
   session.connect(token);
   
@@ -15,7 +16,7 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
     while (!userName.match(/[a-zA-Z0-9_-]+/)){
       userName = window.prompt("Enter Your Name:")
     }
-    publisher = OT.initPublisher('publisher', {name:userName, width:400, height:300});
+    publisher = OT.initPublisher('publisher', {name:userName});
     session.publish(publisher);
     //screenshare();
   
@@ -77,8 +78,8 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       }
     };
     textButton.setAttribute('id', 'submit'+event.stream.name);
-    textButton.setAttribute('class', 'submit');
-    textButton.setAttribute('type', 'submit');
+    textButton.setAttribute('class', 'btn-primary');
+    textButton.setAttribute('type', 'submit1');
     textButton.onclick =  function(){
       var txt = document.getElementById("text" + event.stream.name).value;
       if (txt != ""){
@@ -133,6 +134,7 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
 
     button.setAttribute('id', 'send' + event.stream.name);
     button.setAttribute('type', 'submit');
+    button.setAttribute('class', 'btn-primary');
     buttonName = "Send to " + event.stream.name; 
     button.appendChild(document.createTextNode(buttonName));
     button.appendChild(document.createElement("br"));
@@ -147,14 +149,25 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       }
       $('#textChat' + event.stream.name).fadeToggle('slow', function(){
         resizePublisher();
-        if (subscribers.length > 0){
-          resizeSubscribers();
-        }
       });
       $("#list").fadeToggle("slow");
     };
     document.body.appendChild(div);
     $('#list').append(button);
+    var remain = connectionCount%2;
+    var connectionNum;
+    if(remain == 0){
+      connectionNum = connectionCount;
+    }
+    else{
+      connectionNum = connectionCount + 1;
+    }
+    var num = 100/(connectionNum/2);
+    var numPer = num + "%";
+    for(var i=0; i<subscribers.length; i++){
+      subscribers[i].element.style.width = '50%';
+      subscribers[i].element.style.height = numPer;
+    }
   });
 
   session.on("streamDestroyed", function(event){
@@ -171,6 +184,25 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
 
   session.on("connectionCreated", function(event){ 
     connectionObjects.push(event);
+    connectionCount += 1
+    if(connectionCount == 1){
+      publisher.element.style.width = "100%";
+      publisher.element.style.height = "100%";
+    }
+    else{
+      var remain = connectionCount%2;
+      var connectionNum;
+      if(remain == 0){
+        connectionNum = connectionCount;
+      }
+      else{
+        connectionNum = connectionCount + 1;
+      }
+      var num = 100/(connectionNum/2);
+      var numPer = num + "%";
+      publisher.element.style.width = "50%";
+      publisher.element.style.height = numPer;
+    }
   });
 
   session.on("signal", function(event) {
@@ -190,9 +222,6 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       if($("#textChat").is(":hidden")){
         $("#textChat").fadeToggle("slow", function(){
           resizePublisher();
-          if (subscribers.length > 0){
-            resizeSubscribers();
-          }
         });
       }
     }
@@ -206,9 +235,6 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
           if($("#textChat"+streamObjects[i].stream.name).is(":hidden")){
             $("#textChat"+streamObjects[i].stream.name).fadeToggle('slow', function(){
               resizePublisher();
-              if (subscribers.length > 0){
-                resizeSubscribers();
-              }
             });
           }
         }
@@ -232,20 +258,17 @@ function subscribeToStreams(stream) {
   $('#videoBox').append(div);
   var subscriber;
   var check = true;
-  for(var i = 0; i < streamObjects.length; i++){
-    if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
-      check = false;
-    }
-  }
-  if ($("#textChat").is(":visible")){
-    check = false;
-  }
-  if(check == false){
-    subscriber = session.subscribe(stream, div.id, {width:300, height:200}); 
+  var remain = connectionCount%2;
+  var connectionNum;
+  if(remain == 0){
+    connectionNum = connectionCount;
   }
   else{
-    subscriber = session.subscribe(stream, div.id, {width:400, height:300});
+    connectionNum = connectionCount + 1;
   }
+  var num = 100/(connectionNum/2);
+  var numPer = num + "%";
+  subscriber = session.subscribe(stream, div.id, {width:'50%', height:numPer});
   subscribers.push(subscriber);
 }
 
@@ -281,37 +304,17 @@ function resizePublisher() {
   }
 
   if (check == false){
-    publisher.element.style.width = "300px";
-    publisher.element.style.height = "200px";
+    document.getElementById("videoBox").style.width = "65%";
+    document.getElementById("videoBox").style.right = "25%";
+    document.getElementById("videoBox").style.left = "0";
   }
   else{
-    publisher.element.style.width = "400px";
-    publisher.element.style.height = "300px";
+    document.getElementById("videoBox").style.width = "95%";
+    document.getElementById("videoBox").style.right = "0";
+    document.getElementById("videoBox").style.left = "5%";
   }
 }
 
-function resizeSubscribers(){
-  var check = true;
-  for(var i = 0; i < streamObjects.length; i++){
-    if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
-      check = false;
-    }
-  }
-  if ($("#textChat").is(":visible")){
-    check = false;
-  }
-  for (var i = 0; i < subscribers.length; i++){
-    if (check === false){
-      subscribers[i].element.style.width = "300px";
-      subscribers[i].element.style.height = "200px";
-    }
-    else{
-      subscribers[i].element.style.width = "400px";
-      subscribers[i].element.style.height = "300px";
-    }
-  }
-}
-    
 function sendSignalToAll(){
   var txt = document.getElementById("text").value;
   if (txt != ""){
@@ -338,9 +341,6 @@ function showTextChatForAll(){
   }
   $("#textChat").fadeToggle('slow', function(){
     resizePublisher();
-    if (subscribers.length > 0){
-      resizeSubscribers();
-    }
   });
   $("#list").fadeToggle("slow");
 }

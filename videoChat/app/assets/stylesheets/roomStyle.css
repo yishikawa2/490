@@ -3,10 +3,10 @@
   position:absolute; 
   top:0;
   bottom:0;
-  left:0;
+  left:5%;
   right:0;
-  width:800px;
-  height:600px;
+  width:95%;
+  height:100%;
   margin:auto;
 }
 
@@ -94,10 +94,10 @@ input[class="text"]{
   left:0;
   right:0;
   width:80%;
-  height:85%;
+  height:100%;
 }
 
-button[class="submit"]{
+button[type="submit1"]{
   position:absolute;
   top:0;
   bottom:0;

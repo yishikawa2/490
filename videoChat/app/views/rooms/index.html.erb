@@ -2,22 +2,61 @@
   <meta charset="UTF-8">
   <title>Video Chat</title>
   <style>
-     .field input {
+    #welcome{
+      display:inline-block;
+      position:absolute; 
+      top:0;
+      bottom:600px;
+      left:100px;
+      right:0;
+      width:600px;
+      height:100px;
+      margin:auto;
+    }   
+ 
+    #newRoom{
+      display:inline-block;
+      position:absolute; 
+      top:0;
+      bottom:100px;
+      left:0;right:0;
+      width:50%;
+      height:30%;
+      margin:auto;
+      background-color:white;
+      opacity:0.8;
+    }
+
+    .field input {
       color: black;
       font-weight: bold;
       font-size: 24px;
       padding: 10px;
       border: 2px solid black;
       border-radius:2px;
-    };
+    }
+
+    #partyRoom{
+      display:inline-block;
+      position:absolute; 
+      top:500px;
+      bottom:0;
+      left:0;
+      right:0;
+      width:50%;
+      height:30%;
+      margin:auto;
+      background-color:white;
+      opacity:0.8
+    }
   </style>
 </head>
 
 <body>
-  <div id="welcome", style="display: inline-block;position:absolute; top:0;bottom:600px;left:100px;right:0;width:600px;height:100px;margin:auto;">
-    <h1><font size="7">Welcome to VCHAT</font><h1>
+  <div id="welcome">
+    <h1><font color="black" size="7">Welcome to VCHAT</font><h1>
   </div>
-  <div id="newRoom", style="display: inline-block;position:absolute; top:0;bottom:100px;left:0;right:0;width:700px;height:200px;margin:auto;background-color:white;opacity:0.8;">
+  <div id="newRoom">
     <% if notice != nil %>
       <p id="notice", align="center"><%= notice.html_safe %></p>
     <% end %>
@@ -25,12 +64,12 @@
     <%= form_for(@new_room) do |f| %>
       <div class="field">
         <font size="6">Party Name: </font><%= f.text_field :name, :placeholder => "Enter a room name" %>
-        <%= f.submit "Create" %>
+        <%= f.submit "Create", :class => 'btn-primary' %>
       </div>
     <% end %>
   </div>
   <br>
-  <div id="partyRoom", style="display: inline-block;position:absolute; top:500px;bottom:0;left:0;right:0;width:700px;height:200px;margin:auto;background-color:white;opacity:0.8">
+  <div id="partyRoom">
     <font size="6">Existing party rooms</font><br><br>
     <% if @rooms != nil %>
       <% @count=0 %>
