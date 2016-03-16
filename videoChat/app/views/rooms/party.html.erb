@@ -30,9 +30,10 @@
   <div id="options">  
     <input type="image" title="Copy URL" src="<%= asset_path 'copy-link.jpg' %>" alt="submit" width="100%" height="5%" onclick="copyToClipboard('https://bikkun.com/videoChat/party/<%=@room.id%>-<%=@room.name%>')">
     <input id="chatButton" title="Text Chet" type="image" src= "<%= asset_path 'text.jpg' %>" alt="submit" width="100%" height="5%">
+    <input id="chatButton" title="Change to Screen Share" type="image" src= "<%= asset_path 'swap.png' %>" alt="submit" width="100%" height="5%" onclick="screenshare()">
   </div>
   <div id="list">
-      <button class="btn-primary" type="submit" id="sendAll" onclick="showTextChatForAll()">Send to All<br></button>
+      <button class="btn-primary" type="submit" id="sendAll" style="width:100%" onclick="showTextChatForAll()">Send to All<br></button>
   </div>
 
 </body>

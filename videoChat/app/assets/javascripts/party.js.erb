@@ -2,6 +2,7 @@ var sessionId = window.sessionId;
 var token = window.tok_token;
 var apiKey = window.apiKey;
 if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
+  var extensionId = 'ifgkmcplogccdkmkccgcjlicfcpcbihl';
   var session = OT.initSession(apiKey, sessionId);
   var publisher;
   var subscribers = [];
@@ -9,6 +10,7 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
   var streamObjects = [];
   var userName = ""
   var connectionCount = 0;
+  OT.registerScreenSharingExtension('chrome', extensionId, 2);
    
   session.connect(token);
   
@@ -135,6 +137,7 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
     button.setAttribute('id', 'send' + event.stream.name);
     button.setAttribute('type', 'submit');
     button.setAttribute('class', 'btn-primary');
+    button.style.width = "100%";
     buttonName = "Send to " + event.stream.name; 
     button.appendChild(document.createTextNode(buttonName));
     button.appendChild(document.createElement("br"));
@@ -172,6 +175,11 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
 
   session.on("streamDestroyed", function(event){
     connectionCount -= 1;
+    var targetButton = document.getElementById("send" + event.stream.name);
+    var targetDiv = document.getElementById("textChat" + event.stream.name);
+    targetDiv.remove();
+    targetButton.remove();
+
     var remain = connectionCount%2;
     var connectionNum;
     if(remain == 0){
@@ -182,14 +190,12 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
     }
     var num = 100/(connectionNum/2);
     var numPer = num + "%";
+
     for(var i=0; i < subscribers.length+1; i++){
       subscribers[i].element.style.width = '50%';
       subscribers[i].element.style.height = numPer;
     }
-    var targetButton = document.getElementById("send" + event.stream.name); 
-    var targetDiv = document.getElementById("textChat" + event.stream.name);
-    targetDiv.remove();
-    targetButton.remove();
+
     for (var i = 0; i < subscribers.length; i++ ){
       if(event.stream.streamId == subscribers[i].streamId){
         subscribers.splice(subscribers[i], 1);
@@ -242,13 +248,20 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
   });
 
   session.on("signal", function(event) {
+    var div = document.createElement('div');
     var p = document.createElement('p');
-    var text = document.createTextNode(event.data)
-    p.setAttribute('class', 'speech')
+    var text = document.createTextNode(event.data) 
+    if(event.from.connectionId  == session.connection.connectionId){
+      div.setAttribute('class', 'bubble');
+    }
+    else{
+      div.setAttribute('class', 'speech');
+    }
     p.appendChild(text);
     p.style.fontSize = "xx-large";
+    div.appendChild(p);
     if(event.type == "signal"){
-      $('#chat').append(p);
+      $('#chat').append(div);
       $('#chat').append('<br>');
       for(var i = 0; i < streamObjects.length; i++){
         if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
@@ -264,7 +277,7 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
     else{
       var type = event.type;
       var name = type.substring(7);
-      $('#chat'+name).append(p);
+      $('#chat'+name).append(div);
       $('#chat'+name).append('<br>');
       for(var i = 0; i < streamObjects.length; i++){
         if(name == streamObjects[i].stream.name){
@@ -285,122 +298,129 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       }
     }
   });
-}
 
-function subscribeToStreams(stream) {
-  var div = document.createElement('div');
-  div.setAttribute('id', 'stream' + stream.streamId);
-  div.style.float = "left";
-  $('#videoBox').append(div);
-  var subscriber;
-  var check = true;
-  var remain = connectionCount%2;
-  var connectionNum;
-  if(remain == 0){
-    connectionNum = connectionCount;
-  }
-  else{
-    connectionNum = connectionCount + 1;
-  }
-  var num = 100/(connectionNum/2);
-  var numPer = num + "%";
-  subscriber = session.subscribe(stream, div.id, {width:'50%', height:numPer});
-  subscribers.push(subscriber);
-}
-
-function screenshare() {
-  OT.checkScreenSharingCapability(function(response) {
-    if (!response.supported || response.extensionRegistered === false) {
-      alert('This browser does not support screen sharing.');
-    } 
-    else if (response.extensionInstalled === false) {
-      alert('Please install the screen sharing extension and load your app over https.');
+  function subscribeToStreams(stream) {
+    var div = document.createElement('div');
+    div.setAttribute('id', 'stream' + stream.streamId);
+    div.style.float = "left";
+    $('#videoBox').append(div);
+    var subscriber;
+    var check = true;
+    var remain = connectionCount%2;
+    var connectionNum;
+    if(remain == 0){
+      connectionNum = connectionCount;
     }
-    else {
-      // Screen sharing is available. Publish the screen.
-      var screenSharingPublisher = OT.initPublisher('screen-preview', {videoSource: 'screen'});
-      session.publish(screenSharingPublisher, function(error) {
-        if (error) {
-          alert('Could not share the screen: ' + error.message);
-        }
-      });
+    else{
+      connectionNum = connectionCount + 1;
     }
-  });
-}
-
-function resizePublisher() {
-  var check = true;
-  for(var i = 0; i < streamObjects.length; i++){
-    if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
-      check = false;
-    }
-  }
-  if ($("#textChat").is(":visible")){
-    check = false;
+    var num = 100/(connectionNum/2);
+    var numPer = num + "%";
+    subscriber = session.subscribe(stream, div.id, {width:'50%', height:numPer});
+    subscribers.push(subscriber);
   }
 
-  if (check == false){
-    document.getElementById("videoBox").style.width = "65%";
-    document.getElementById("videoBox").style.right = "25%";
-    document.getElementById("videoBox").style.left = "0";
-  }
-  else{
-    document.getElementById("videoBox").style.width = "95%";
-    document.getElementById("videoBox").style.right = "0";
-    document.getElementById("videoBox").style.left = "5%";
-  }
-}
-
-function sendSignalToAll(){
-  var txt = document.getElementById("text").value;
-  if (txt != ""){
-    session.signal(
-    {
-      data:txt
-    },
-    function(error) {
-      if (error) {
-        alert("signal error (" + error.code + "): " + error.message);
+  function screenshare() {
+    OT.checkScreenSharingCapability(function(response) {
+      if (!response.supported || response.extensionRegistered === false) {
+        alert('This browser does not support screen sharing.');
+      } 
+      else if (response.extensionInstalled === false) {
+        alert('Please install the screen sharing extension and load your app over https.');
       }
-      else{
-        document.getElementById("text").value = "";
+      else {
+        // Screen sharing is available. Publish the screen.
+        //publisher.stream.videoType = "screen";
+        //alert(publisher.stream.videoType);
+        var width = publisher.element.style.width;
+        var height = publisher.element.style.height;
+        publisher = null;
+        alert(width + " " + height + " " + publisher);
+        publisher = OT.initPublisher('publisher', {videoSource: 'screen', name:userName, width:width, height:height});
+        alert(publisher.stream.videoType);
+        session.publish(publisher, function(error) {
+          if (error) {
+            alert('Could not share the screen: ' + error.message);
+          }
+        });
       }
     });
   }
-}
-    
-function showTextChatForAll(){  
-  for(var i = 0; i < streamObjects.length; i++){
-    if ($("#textChat"+streamObjects[i].stream.name).is(":visible")){
-      $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
+
+  function resizePublisher() {
+    var check = true;
+    for(var i = 0; i < streamObjects.length; i++){
+      if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
+        check = false;
+      }
+    }
+    if ($("#textChat").is(":visible")){
+      check = false;
+    }
+
+    if (check == false){
+      document.getElementById("videoBox").style.width = "65%";
+      document.getElementById("videoBox").style.right = "25%";
+      document.getElementById("videoBox").style.left = "0";
+    }
+    else{
+      document.getElementById("videoBox").style.width = "95%";
+      document.getElementById("videoBox").style.right = "0";
+      document.getElementById("videoBox").style.left = "5%";
     }
   }
-  $("#textChat").fadeToggle('slow', function(){
-    resizePublisher();
-  });
-  $("#list").fadeToggle("slow");
-}
 
-$(document).ready(function(){
-  $("#chatButton").click(function(){
-    $("#list").fadeToggle('slow');
-  });
-     
-  $("#text").keyup(function(event){
-    if(event.keyCode==13){
-      $("#submit").click();
+  function sendSignalToAll(){
+    var txt = document.getElementById("text").value;
+    if (txt != ""){
+      session.signal(
+      {
+        data:txt
+      },
+      function(error) {
+        if (error) {
+          alert("signal error (" + error.code + "): " + error.message);
+        }
+        else{
+          document.getElementById("text").value = "";
+        }
+      });
     }
-  }); 
-});
+  }
+    
+  function showTextChatForAll(){  
+    for(var i = 0; i < streamObjects.length; i++){
+      if ($("#textChat"+streamObjects[i].stream.name).is(":visible")){
+        $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
+      }
+    }
+    $("#textChat").fadeToggle('slow', function(){
+      resizePublisher();
+    });
+    $("#list").fadeToggle("slow");
+  }
 
-function copyToClipboard(text){
-  var copyDiv = document.createElement('div');
-  copyDiv.contentEditable = true;
-  document.body.appendChild(copyDiv);
-  copyDiv.innerHTML = text;
-  copyDiv.unselectable = "off";
-  copyDiv.focus();
-  document.execCommand('SelectAll');
-  document.execCommand("Copy", false, null);
-  document.body.removeChild(copyDiv);
+  $(document).ready(function(){
+    $("#chatButton").click(function(){
+      $("#list").fadeToggle('slow');
+    });
+     
+    $("#text").keyup(function(event){
+      if(event.keyCode==13){
+        $("#submit").click();
+      }
+    }); 
+  });
+
+  function copyToClipboard(text){
+    var copyDiv = document.createElement('div');
+    copyDiv.contentEditable = true;
+    document.body.appendChild(copyDiv);
+    copyDiv.innerHTML = text;
+    copyDiv.unselectable = "off";
+    copyDiv.focus();
+    document.execCommand('SelectAll');
+    document.execCommand("Copy", false, null);
+    document.body.removeChild(copyDiv);
+  }
 }
