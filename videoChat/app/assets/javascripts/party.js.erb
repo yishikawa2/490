@@ -10,6 +10,8 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
   var streamObjects = [];
   var userName = ""
   var connectionCount = 0;
+  var width;
+  var height;
   OT.registerScreenSharingExtension('chrome', extensionId, 2);
    
   session.connect(token);
@@ -18,9 +20,11 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
     while (!userName.match(/[a-zA-Z0-9_-]+/)){
       userName = window.prompt("Enter Your Name:")
     }
-    publisher = OT.initPublisher('publisher', {name:userName});
+    var div = document.createElement('div');
+    div.setAttribute('id', 'publisher');
+    $('#videoBox').append(div);
+    publisher = OT.initPublisher('publisher', {insertMode:'replace', name:userName});
     session.publish(publisher);
-    //screenshare();
   
     for (var i = 0; i < event.streams.length; i++) {
       if (event.streams[i].connection.connectionId != session.connection.connectionId){
@@ -34,9 +38,10 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
   });
 
   session.on("streamCreated", function streamCreatedHandler(event) {
+    //alert("From Stream Created:\nConnection Count: " + connectionCount);
     for (var i = 0; i < event.streams.length; i++) {
       if (event.streams[i].connection.connectionId != session.connection.connectionId){
-        subscribeToStreams(event.streams[i]);
+          subscribeToStreams(event.streams[i]);
       }
     }
 
@@ -157,54 +162,25 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
     };
     document.body.appendChild(div);
     $('#list').append(button);
-    var remain = connectionCount%2;
-    var connectionNum;
-    if(remain == 0){
-      connectionNum = connectionCount;
-    }
-    else{
-      connectionNum = connectionCount + 1;
-    }
-    var num = 100/(connectionNum/2);
-    var numPer = num + "%";
-    for(var i=0; i<subscribers.length; i++){
-      subscribers[i].element.style.width = '50%';
-      subscribers[i].element.style.height = numPer;
-    }
   });
 
   session.on("streamDestroyed", function(event){
-    connectionCount -= 1;
+    //alert("From Stream Destroyed:\nReason: " + event.reason + "\nConnection Count: " + connectionCount);
     var targetButton = document.getElementById("send" + event.stream.name);
     var targetDiv = document.getElementById("textChat" + event.stream.name);
     targetDiv.remove();
     targetButton.remove();
 
-    var remain = connectionCount%2;
-    var connectionNum;
-    if(remain == 0){
-      connectionNum = connectionCount;
-    }
-    else{
-      connectionNum = connectionCount + 1;
-    }
-    var num = 100/(connectionNum/2);
-    var numPer = num + "%";
-
-    for(var i=0; i < subscribers.length+1; i++){
-      subscribers[i].element.style.width = '50%';
-      subscribers[i].element.style.height = numPer;
-    }
-
     for (var i = 0; i < subscribers.length; i++ ){
       if(event.stream.streamId == subscribers[i].streamId){
-        subscribers.splice(subscribers[i], 1);
+        subscribers.splice(i, 1);
       }
     }
   });
 
-  session.on("connectionCreated", function(event){ 
+  session.on("connectionCreated", function(event){
     connectionObjects.push(event);
+    //alert("From ConnectionCreated:\nConnection Count: " + connectionCount);
     connectionCount += 1
     if(connectionCount == 1){
       publisher.element.style.width = "100%";
@@ -221,12 +197,18 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       }
       var num = 100/(connectionNum/2);
       var numPer = num + "%";
+      for(var i=0; i < subscribers.length; i++){
+        subscribers[i].element.style.width = '50%';
+        subscribers[i].element.style.height = numPer;
+      }
       publisher.element.style.width = "50%";
       publisher.element.style.height = numPer;
     }
   });
 
   session.on("connectionDestroyed", function(event){
+    connectionCount -= 1;
+    //alert("From Connection Destroyed:\nConnection Count: " + connectionCount);
     if(connectionCount == 1){
       publisher.element.style.width = "100%";
       publisher.element.style.height = "100%";
@@ -244,6 +226,10 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       var numPer = num + "%";
       publisher.element.style.width = "50%";
       publisher.element.style.height = numPer;
+      for(var i=0; i < subscribers.length; i++){
+        subscribers[i].element.style.width = '50%';
+        subscribers[i].element.style.height = numPer;
+      }
     }
   });
 
@@ -330,19 +316,29 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       }
       else {
         // Screen sharing is available. Publish the screen.
-        //publisher.stream.videoType = "screen";
-        //alert(publisher.stream.videoType);
-        var width = publisher.element.style.width;
-        var height = publisher.element.style.height;
-        publisher = null;
-        alert(width + " " + height + " " + publisher);
-        publisher = OT.initPublisher('publisher', {videoSource: 'screen', name:userName, width:width, height:height});
-        alert(publisher.stream.videoType);
-        session.publish(publisher, function(error) {
-          if (error) {
-            alert('Could not share the screen: ' + error.message);
+        publisher.on('streamDestroyed', function(event){
+          if (event.reason == "unpublished" && event.stream.videoType == "screen"){
+            event.preventDefault();
+            publisher = OT.initPublisher('publisher', {insertMode:'replace', name:userName, width:width, height:height});
+            session.publish(publisher, function(error) {
+              if (error) {
+                alert('Could not share the screen: ' + error.message);
+              }
+            });
+          }
+          else if (event.reason == "unpublished" && event.stream.videoType == "camera"){
+            event.preventDefault();
+            publisher = OT.initPublisher('publisher', {insertMode:'replace', videoSource: 'screen', name:userName, width:width, height:height});
+            session.publish(publisher, function(error) {
+              if (error) {
+                alert('Could not share the screen: ' + error.message);
+              }
+            });
           }
         });
+        width = publisher.element.style.width;
+        height = publisher.element.style.height;
+        session.unpublish(publisher);
       }
     });
   }
