@@ -27,6 +27,13 @@ class RoomsController < ApplicationController
     @tok_token = @opentok.generate_token @room.sessionId 
   end
 
+  def downloadChromeExtension
+    @file_name = "chrome_extension.zip"
+    @filePath = Rails.root.join('public', @file_name)
+    @stat = File::stat(@filePath)
+    send_file(@filePath, :filename => @file_name, :length => @stat.size)
+  end
+
   private 
   def config_opentok
     if @opentok.nil?

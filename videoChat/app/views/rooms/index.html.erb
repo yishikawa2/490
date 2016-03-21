@@ -6,7 +6,7 @@
       display:inline-block;
       position:absolute; 
       top:0;
-      bottom:600px;
+      bottom:500px;
       left:100px;
       right:0;
       width:600px;
@@ -18,9 +18,10 @@
       display:inline-block;
       position:absolute; 
       top:0;
-      bottom:100px;
-      left:0;right:0;
-      width:50%;
+      bottom:200px;
+      left:0;
+      right:0;
+      width:60%;
       height:30%;
       margin:auto;
       background-color:white;
@@ -39,15 +40,29 @@
     #partyRoom{
       display:inline-block;
       position:absolute; 
-      top:500px;
+      top:200px;
       bottom:0;
       left:0;
-      right:0;
-      width:50%;
+      right:30%;
+      width:25%;
       height:30%;
       margin:auto;
       background-color:white;
       opacity:0.8
+    }
+  
+    #chrome_extension{
+      display:inline-block;
+      position:absolute;
+      top:200px;
+      bottom:0;
+      left:30%;
+      right:0;
+      width:25%;
+      height:30%;
+      margin:auto;
+      background-color:white;
+      opacity:0.8;
     }
   </style>
 </head>
@@ -60,26 +75,29 @@
     <% if notice != nil %>
       <p id="notice", align="center"><%= notice.html_safe %></p>
     <% end %>
-    <font size="7">New party room</font><br><br><br>
+    <font size="6">New party room</font><br><br><br>
     <%= form_for(@new_room) do |f| %>
       <div class="field">
-        <font size="6">Party Name: </font><%= f.text_field :name, :placeholder => "Enter a room name" %>
+        <font size="5">Party Name: </font><%= f.text_field :name, :placeholder => "Enter a room name" %>
         <%= f.submit "Create", :class => 'btn-primary' %>
       </div>
     <% end %>
   </div>
   <br>
   <div id="partyRoom">
-    <font size="6">Existing party rooms</font><br><br>
+    <font size="5">Existing party rooms</font><br><br>
     <% if @rooms != nil %>
       <% @count=0 %>
       <% @rooms.each do |room| %>
-        <font size="5"><%= link_to h(room.name), :action => 'party', :id => room %></font>
-        <%@count += 1%>
+        <li style="float:left;"><font size="3"><%= link_to h(room.name), :action => 'party', :id => room %></font></li>
+        <% @count += 1 %>
       <% end %>
     <% end %>
     <% if @count == 0 %> 
       <p style="text-align:center;"><br><br><font size="5">NO ROOM</font></p>
     <% end %>
+  </div>
+  <div id='chrome_extension'>
+    <%= link_to "Download chrome extension for scrren share", {:controller =>"rooms", :action => "downloadChromeExtension"} %>
   </div>
 </body>
