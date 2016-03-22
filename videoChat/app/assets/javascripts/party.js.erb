@@ -10,6 +10,8 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
   var streamObjects = [];
   var userName = ""
   var connectionCount = 0;
+  var subCount = 0;
+  var subDiv = null;
   var width;
   var height;
   OT.registerScreenSharingExtension('chrome', extensionId, 2);
@@ -17,20 +19,26 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
   session.connect(token);
   
   session.on("sessionConnected", function sessionConnectedHandler(event) {
+    //alert("From Session Connected:\nConnection Count: " + connectionCount);
     while (!userName.match(/[a-zA-Z0-9_-]+/)){
       userName = window.prompt("Enter Your Name:")
     }
+    var parDiv = document.createElement('div');
+    parDiv.setAttribute('id', 'publisherContainer');
+    parDiv.style.width = '100%'; 
+    parDiv.style.height = '100%'; 
     var div = document.createElement('div');
     div.setAttribute('id', 'publisher');
-    $('#videoBox').append(div);
+    parDiv.appendChild(div);
+    $('#videoBox').append(parDiv);
     publisher = OT.initPublisher('publisher', {insertMode:'replace', name:userName});
     session.publish(publisher);
-  
+  /*
     for (var i = 0; i < event.streams.length; i++) {
       if (event.streams[i].connection.connectionId != session.connection.connectionId){
         subscribeToStreams(event.streams[i]);
       }
-    }
+    }*/
   });
 
   session.on("sessionDisconnected", function(event){
@@ -38,12 +46,13 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
   });
 
   session.on("streamCreated", function streamCreatedHandler(event) {
-    //alert("From Stream Created:\nConnection Count: " + connectionCount);
+    //alert(event.streams.length);
     for (var i = 0; i < event.streams.length; i++) {
       if (event.streams[i].connection.connectionId != session.connection.connectionId){
           subscribeToStreams(event.streams[i]);
       }
     }
+    //alert("From Stream Created:\nConnection Count: " + connectionCount);
 
     streamObjects.push(event);
     var div = document.createElement('div');
@@ -168,11 +177,12 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
     //alert("From Stream Destroyed:\nReason: " + event.reason + "\nConnection Count: " + connectionCount);
     var targetButton = document.getElementById("send" + event.stream.name);
     var targetDiv = document.getElementById("textChat" + event.stream.name);
+    subDiv = document.getElementById("stream" + event.stream.streamId).parentElement;
     targetDiv.remove();
     targetButton.remove();
 
     for (var i = 0; i < subscribers.length; i++ ){
-      if(event.stream.streamId == subscribers[i].streamId){
+      if(event.stream.streamId == subscribers[i].stream.streamId){
         subscribers.splice(i, 1);
       }
     }
@@ -180,9 +190,12 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
 
   session.on("connectionCreated", function(event){
     connectionObjects.push(event);
-    //alert("From ConnectionCreated:\nConnection Count: " + connectionCount);
     connectionCount += 1
+    //alert("From ConnectionCreated:\nConnection Count: " + connectionCount);
+    var pubDiv = document.getElementById('publisherContainer');
     if(connectionCount == 1){
+      pubDiv.style.width = '100%';
+      pubDiv.style.height = '100%';
       publisher.element.style.width = "100%";
       publisher.element.style.height = "100%";
     }
@@ -197,19 +210,41 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       }
       var num = 100/(connectionNum/2);
       var numPer = num + "%";
-      for(var i=0; i < subscribers.length; i++){
-        subscribers[i].element.style.width = '50%';
-        subscribers[i].element.style.height = numPer;
-      }
-      publisher.element.style.width = "50%";
-      publisher.element.style.height = numPer;
+
+      var newDiv = document.createElement('div');
+      newDiv.style.float = "left";
+      subCount += 1;
+      newDiv.setAttribute('id',"subscriberContainer" + subCount.toString());
+      newDiv.style.width = "50%";
+      newDiv.style.height = numPer;
+      $('#videoBox').append(newDiv);
+      //var pardiv = newDiv.parentElement
+      //alert(pardiv.id);
+      pubDiv.style.width = '50%';
+      pubDiv.style.height = numPer;
+      publisher.element.style.width = "100%";
+      publisher.element.style.height = "100%";
+      //alert("count: " + connectionCount +"\nsubscriber length: " + subscribers.length);
+/*      for(var i=0; i < subscribers.length; i++){
+        var parDiv = document.getElementById('stream'+subscribers[i].stream.streamId).parentElement;
+        alert(subscribers[i].stream.streamId);
+        parDiv.style.width = '50%';
+        parDiv.style.height = numPer;
+        subscribers[i].element.style.width = '100%';
+        subscribers[i].element.style.height = '100%';
+      }*/
     }
   });
 
   session.on("connectionDestroyed", function(event){
     connectionCount -= 1;
+    subDiv.remove();
+    subDiv = null; 
     //alert("From Connection Destroyed:\nConnection Count: " + connectionCount);
+    var pubDiv = document.getElementById('publisherContainer');
     if(connectionCount == 1){
+      pubDiv.style.width = '100%';
+      pubDiv.style.height = '100%';
       publisher.element.style.width = "100%";
       publisher.element.style.height = "100%";
     }
@@ -224,11 +259,23 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       }
       var num = 100/(connectionNum/2);
       var numPer = num + "%";
-      publisher.element.style.width = "50%";
-      publisher.element.style.height = numPer;
+      pubDiv.style.width = '50%';
+      pubDiv.style.height = numPer;
+      publisher.element.style.width = "100%";
+      publisher.element.style.height = "100%";
+
+      for(var i=1; i<subCount; i++){
+        var checkSub = document.getElementById('subscriberContainer'+i.toString());
+        if(checkSub != null){
+          checkSub.style.width = '50%';
+          checkSub.style.height = numPer;
+        }
+      }
       for(var i=0; i < subscribers.length; i++){
-        subscribers[i].element.style.width = '50%';
-        subscribers[i].element.style.height = numPer;
+        var subscribeDiv = document.getElementById('stream'+subscribers[i].stream.streamId)
+        subscribeDiv.style.height = numPer;
+        subscribers[i].element.style.width = '100%';
+        subscribers[i].element.style.height = '100%';
       }
     }
   });
@@ -287,11 +334,18 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
 
   function subscribeToStreams(stream) {
     var div = document.createElement('div');
+    var index = -1;
     div.setAttribute('id', 'stream' + stream.streamId);
-    div.style.float = "left";
-    $('#videoBox').append(div);
-    var subscriber;
-    var check = true;
+    for(var i=1; i<=subCount; i++){
+      if(document.getElementById('subscriberContainer' + i.toString())){
+        if($('#subscriberContainer'+i.toString()).is(':empty')){
+          index = i.toString();
+          break
+        }
+      }
+    }
+    document.getElementById('subscriberContainer' + index).appendChild(div);
+    
     var remain = connectionCount%2;
     var connectionNum;
     if(remain == 0){
@@ -302,7 +356,16 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
     }
     var num = 100/(connectionNum/2);
     var numPer = num + "%";
-    subscriber = session.subscribe(stream, div.id, {width:'50%', height:numPer});
+    for(var i=0; i < subscribers.length; i++){
+        var parDiv = document.getElementById('stream'+subscribers[i].stream.streamId).parentElement;
+      //alert(parDiv.id);
+      parDiv.style.width = '50%';
+      parDiv.style.height = numPer;
+      subscribers[i].element.style.width = '100%';
+      subscribers[i].element.style.height = '100%';
+    }
+    var subscriber;
+    subscriber = session.subscribe(stream, div.id, {width:'100%', height:'100%'});
     subscribers.push(subscriber);
   }
 

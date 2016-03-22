@@ -28,13 +28,26 @@
       opacity:0.8;
     }
 
-    .field input {
+    .field input[type=text] {
       color: black;
       font-weight: bold;
       font-size: 24px;
       padding: 10px;
       border: 2px solid black;
       border-radius:2px;
+      width:60%;
+      height:20%;
+    }
+
+    .field input[type=submit] {
+      color: black;
+      font-weight: bold;
+      font-size: 24px;
+      padding: 10px;
+      border: 2px solid black;
+      border-radius:2px;
+      width:30%;
+      height:20%;
     }
 
     #partyRoom{
@@ -51,7 +64,7 @@
       opacity:0.8
     }
   
-    #chrome_extension{
+    #extensions{
       display:inline-block;
       position:absolute;
       top:200px;
@@ -75,12 +88,12 @@
     <% if notice != nil %>
       <p id="notice", align="center"><%= notice.html_safe %></p>
     <% end %>
-    <font size="6">New party room</font><br><br><br>
-    <%= form_for(@new_room) do |f| %>
-      <div class="field">
-        <font size="5">Party Name: </font><%= f.text_field :name, :placeholder => "Enter a room name" %>
+    <font size="6">New party room</font><br>
+    <%= form_for(@new_room, :html => {:class => 'field'}) do |f| %>
+      
+        <font size="5">Party Name: </font><br><%= f.text_field :name, :placeholder => "Enter a room name" %>
         <%= f.submit "Create", :class => 'btn-primary' %>
-      </div>
+     
     <% end %>
   </div>
   <br>
@@ -97,7 +110,14 @@
       <p style="text-align:center;"><br><br><font size="5">NO ROOM</font></p>
     <% end %>
   </div>
-  <div id='chrome_extension'>
-    <%= link_to "Download chrome extension for scrren share", {:controller =>"rooms", :action => "downloadChromeExtension"} %>
+  <div id='extensions'>
+    <font size="5">Download Extensions For Screen Share</font><br>
+    <li>
+      Extension for Chrome <%= link_to "here", {:controller =>"rooms", :action => "downloadChromeExtension"} %>
+    </li>
+    <br>
+    <li>
+      Extension for Firefox <%= link_to "here", {:controller =>"rooms", :action => "downloadChromeExtension"} %>
+    </li>
   </div>
 </body>
