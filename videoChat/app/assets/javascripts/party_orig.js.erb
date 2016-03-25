@@ -12,10 +12,9 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
   var connectionCount = 0;
   var subCount = 0;
   var subDiv = null;
-  var targetStreamID = null;
+  var checkStream = true;
   var width;
   var height;
-  var checkStream = true;
   OT.registerScreenSharingExtension('chrome', extensionId, 2);
    
   session.connect(token);
@@ -23,7 +22,6 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
   session.on("sessionConnected", function sessionConnectedHandler(event) {
     while (!userName.match(/[a-zA-Z0-9_-]+/))
       userName = window.prompt("Enter Your Name:")
-
     var parDiv = document.createElement('div');
     parDiv.setAttribute('id', 'publisherContainer');
     parDiv.style.width = '100%'; 
@@ -32,7 +30,6 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
     div.setAttribute('id', 'publisher');
     parDiv.appendChild(div);
     $('#videoBox').append(parDiv);
-
     publisher = OT.initPublisher('publisher', {insertMode:'replace', name:userName});
     session.publish(publisher);
   });
@@ -42,12 +39,13 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
   });
 
   session.on("streamCreated", function streamCreatedHandler(event) {
+    alert("stream created");
     for (var i = 0; i < event.streams.length; i++) {
       if (event.streams[i].connection.connectionId != session.connection.connectionId)
-          subscribeToStreams(event.streams[i], event.stream.videoType);
+          subscribeToStreams(event.streams[i]);
     }
     streamObjects.push(event);
-    if(checkStream == true){
+    //if(checkStream == true){
       var div = document.createElement('div');
       var button = document.createElement('button');
       div.setAttribute('id', 'textChat' + event.stream.name);
@@ -82,7 +80,7 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       input.onkeyup = function(e){
         if(e.keyCode == 13)
           $("#submit"+name1).click();
-        };
+      };
       textButton.setAttribute('id', 'submit'+event.stream.name);
       textButton.setAttribute('class', 'btn-primary');
       textButton.setAttribute('type', 'submit1');
@@ -99,7 +97,6 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
             if (error)
               alert("signal error (" + error.code + "): " + error.message);
           });
-      
           session.signal(
           {
             to:connection1.connection,
@@ -107,7 +104,7 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
             type:name1
           },
           function(error) {
-            if (error)
+            if (error) 
               alert("signal error (" + error.code + "): " + error.message);
           });
           document.getElementById("text"+event.stream.name).value = "";
@@ -144,7 +141,6 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       button.onclick = function(){
         if ($("#textChat").is(":visible"))
           $("#textChat").fadeToggle('fast');
-
         for(var i = 0; i < streamObjects.length; i++){
           if ($("#textChat"+streamObjects[i].stream.name).is(":visible") && streamObjects[i].stream.name != event.stream.name)
             $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
@@ -156,16 +152,13 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       };
       document.body.appendChild(div);
       $('#list').append(button);
-    }
-    if(checkStream == false && event.stream.videoType == 'screen')
+    //}
+    if(checkStream == false)
       checkStream = true;
   });
 
   session.on("streamDestroyed", function(event){
-    for (var i = 0; i < subscribers.length; i++ ){
-      if(event.stream.streamId == subscribers[i].stream.streamId)
-        subscribers.splice(i, 1);
-    }
+    alert("stream destroyed");
     if(checkStream == true){
       var targetButton = document.getElementById("send" + event.stream.name);
       var targetDiv = document.getElementById("textChat" + event.stream.name);
@@ -173,13 +166,25 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       targetDiv.remove();
       targetButton.remove();
     }
-    if(checkStream == false && event.stream.videoType == 'screen')
-      checkStream = true; 
+
+    for (var i = 0; i < streamObjects.length; i++){
+      if(event.stream.streamId == streamObjects[i].stream.streamId){
+        streamObjects.splice(index, 1);
+        break
+      }
+    }
+
+    for (var i = 0; i < subscribers.length; i++){
+      if(event.stream.streamId == subscribers[i].stream.streamId){
+        subscribers.splice(i, 1);
+        break
+      }
+    }
   });
 
   session.on("connectionCreated", function(event){
     connectionObjects.push(event);
-    connectionCount += 1
+    connectionCount += 1;
     var pubDiv = document.getElementById('publisherContainer');
     if(connectionCount == 1){
       pubDiv.style.width = '100%';
@@ -194,7 +199,7 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
         connectionNum = connectionCount;
       else
         connectionNum = connectionCount + 1;
-      
+
       var num = 100/(connectionNum/2);
       var numPer = num + "%";
 
@@ -216,10 +221,6 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
     connectionCount -= 1;
     subDiv.remove();
     subDiv = null; 
-    for (var i = 0; i < connectionObjects.length; i++ ){
-      if(event.connection.connectionId == connectionObjects[i].connection.connectionId)
-        connectionObjects.splice(i, 1);
-    }
     var pubDiv = document.getElementById('publisherContainer');
     if(connectionCount == 1){
       pubDiv.style.width = '100%';
@@ -241,6 +242,7 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       pubDiv.style.height = numPer;
       publisher.element.style.width = "100%";
       publisher.element.style.height = "100%";
+
       for(var i=1; i<=subCount; i++){
         var checkSub = document.getElementById('subscriberContainer'+i.toString());
         if(checkSub != null){
@@ -249,11 +251,13 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
         }
       }
       for(var i=0; i < subscribers.length; i++){
-        var subscribeDiv = document.getElementById('stream'+subscribers[i].stream.streamId)
-        subscribeDiv.style.height = numPer;
         subscribers[i].element.style.width = '100%';
         subscribers[i].element.style.height = '100%';
       }
+    }
+    for (var i = 0; i < connectionObjects.length; i++){
+      if(event.connection.connectionId == connectionObjects[i].connection.connectionId)
+        connectionObjects.splice(i, 1);
     }
   });
 
@@ -265,7 +269,6 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       div.setAttribute('class', 'bubble');
     else
       div.setAttribute('class', 'speech');
-    
     p.appendChild(text);
     p.style.fontSize = "xx-large";
     div.appendChild(p);
@@ -285,10 +288,8 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
     else{
       var type = event.type;
       var name = type.substring(7);
-      if(name == "switch"){
+      if(name == "switch")
         checkStream = false;
-        targetStreamID = event.data;
-      }
       else{
         $('#chat'+name).append(div);
         $('#chat'+name).append('<br>');
@@ -305,87 +306,62 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
               $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
           }
         }
-        if($("#textChat").is(":visible"))
-          $("#textChat").fadeToggle("fast");
       }
+      if($("#textChat").is(":visible"))
+        $("#textChat").fadeToggle("fast");
     }
   });
 
-  function subscribeToStreams(stream, type) {
+  function subscribeToStreams(stream) {
+    var div = document.createElement('div');
+    var index = null;
+    div.setAttribute('id', 'stream' + stream.streamId);
     for(var i=1; i<=subCount; i++){
-      var parentDiv = document.getElementById('subscriberContainer' + i.toString());
-      if(parentDiv != null){
-        if(targetStreamID != null && type == 'camera'){
-            var tempId = parentDiv.childNodes[0].id;
-            var childDiv = parentDiv.childNodes[0];
-            alert(tempId + " == " + targetStreamID);
-            if(tempId == targetStreamID)
-              childDiv.remove() 
-        }
+      if(document.getElementById('subscriberContainer' + i.toString())){
         if($('#subscriberContainer'+i.toString()).is(':empty')){
-          var div = document.createElement('div');
-          div.setAttribute('id', 'stream' + stream.streamId);
-          document.getElementById('subscriberContainer' + i).appendChild(div);
-          var remain = connectionCount%2;
-          var connectionNum;
-          if(remain == 0)
-            connectionNum = connectionCount;
-          else
-            connectionNum = connectionCount + 1;
-
-          var num = 100/(connectionNum/2);
-          var numPer = num + "%";
-          for(var i=0; i < subscribers.length; i++){
-            var parDiv;
-            if('stream'+subscribers[i].stream.streamId  != targetStreamID){
-              parDiv = document.getElementById('stream'+subscribers[i].stream.streamId).parentElement;
-              parDiv.style.width = '50%';
-              parDiv.style.height = numPer;
-              subscribers[i].element.style.width = '100%';
-              subscribers[i].element.style.height = '100%';
-            }
-          }
-          targetStreamId = null;
-          var subscriber;
-          subscriber = session.subscribe(stream, div.id, {width:'100%', height:'100%'});
-          subscribers.push(subscriber);
+          alert("Empty at " + i);
+          index = i.toString();
           break
         }
       }
     }
+    document.getElementById('subscriberContainer' + index).appendChild(div);
+    
+    var remain = connectionCount%2;
+    var connectionNum;
+    if(remain == 0)
+      connectionNum = connectionCount;
+    else
+      connectionNum = connectionCount + 1;
+
+    var num = 100/(connectionNum/2);
+    var numPer = num + "%";
+    for(var i=0; i < subscribers.length; i++){
+      var parDiv = document.getElementById('stream'+subscribers[i].stream.streamId).parentElement;
+      parDiv.style.width = '50%';
+      parDiv.style.height = numPer;
+      subscribers[i].element.style.width = '100%';
+      subscribers[i].element.style.height = '100%';
+    }
+    var subscriber;
+    subscriber = session.subscribe(stream, div.id, {width:'100%', height:'100%'});
+    subscribers.push(subscriber);
   }
 
   function screenshare() {
     OT.checkScreenSharingCapability(function(response) {
-      if (!response.supported || response.extensionRegistered === false)
+      if (!response.supported || response.extensionRegistered === false) 
         alert('This browser does not support screen sharing.'); 
-      else if (response.extensionInstalled === false) 
+      else if (response.extensionInstalled === false)
         alert('Please install the screen sharing extension and load your app over https.');
       else {
         // Screen sharing is available. Publish the screen.
-        
-        var streamID = 'stream' + publisher.stream.streamId;
-        
-        for(var i = 0; i < connectionObjects.length; i++){
-          if(connectionObjects[i].connection.connectionId  != session.connection.connectionId){
-            session.signal(
-            {
-              to:connectionObjects[i].connection,
-              data:streamID,
-              type:"switch"
-            },
-            function(error) {
-              if (error)
-                alert("signal error (" + error.code + "): " + error.message);
-            }); 
-          }
-        }
         publisher.on('streamDestroyed', function(event){
           if (event.reason == "unpublished" && event.stream.videoType == "screen"){
             event.preventDefault();
             publisher = OT.initPublisher('publisher', {insertMode:'replace', name:userName, width:width, height:height});
             session.publish(publisher, function(error) {
-              if (error)
+              if (error) 
                 alert('Could not share the screen: ' + error.message);
             });
           }
@@ -398,6 +374,16 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
             });
           }
         });
+        /*
+        session.signal(
+        {
+          data:"change camera to screen(screen to camera)",
+          type:"switch"
+        },
+        function(error) {
+          if (error)
+            alert("signal error (" + error.code + "): " + error.message);
+        });*/
         width = publisher.element.style.width;
         height = publisher.element.style.height;
         session.unpublish(publisher);
@@ -434,7 +420,7 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
         data:txt
       },
       function(error) {
-        if (error)
+        if (error) 
           alert("signal error (" + error.code + "): " + error.message);
         else
           document.getElementById("text").value = "";
