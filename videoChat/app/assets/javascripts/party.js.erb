@@ -2,7 +2,7 @@ var sessionId = window.sessionId;
 var token = window.tok_token;
 var apiKey = window.apiKey;
 if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
-  var extensionId = 'ifgkmcplogccdkmkccgcjlicfcpcbihl';
+  var extensionId = 'kfhfgfdapebdhkgalbmhkpffigndnjal';
   var session = OT.initSession(apiKey, sessionId);
   var publisher;
   var subscribers = [];
@@ -285,8 +285,11 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
     else
       div.setAttribute('class', 'speech');
     p1.appendChild(nameFrom); 
+    p2.appendChild(document.createElement("br"));
     p2.appendChild(text);
-    p2.style.fontSize = "xx-large";
+    p2.appendChild(document.createElement("br"));
+    p2.appendChild(document.createElement("br"));
+    p2.style.fontSize = "large";
     div.appendChild(p2);
     if(event.type == "signal"){
       $('#chat').append(p1);
@@ -427,22 +430,53 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
 
   function resizePublisher() {
     var check = true;
+    var check2 = true;
+    var chatName = "";
     for(var i = 0; i < streamObjects.length; i++){
-      if($("#textChat"+streamObjects[i].stream.name).is(":visible"))
+      if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
         check = false;
+        chatName = "textChat" + streamObject[i];
+      }
     }
-    if ($("#textChat").is(":visible"))
+    if ($("#textChat").is(":visible")){
       check = false;
-
-    if (check == false){
+      chatName = "textChat";
+    }
+    if ($("#paintings").is(":visible"))
+      check2 = false;
+    
+    if (check == false && check2 == false){
+      document.getElementById("videoBox").style.height = "70%";
       document.getElementById("videoBox").style.width = "65%";
       document.getElementById("videoBox").style.right = "25%";
       document.getElementById("videoBox").style.left = "0";
+      document.getElementById("videoBox").style.bottom = "30%";
+      document.getElementById(chatName).style.bottom = "30%";
+      document.getElementById(chatName).style.height = "70%";
+      
+    }
+    else if (check == false && check2 == true){
+      document.getElementById("videoBox").style.height = "100%";
+      document.getElementById("videoBox").style.width = "65%";
+      document.getElementById("videoBox").style.right = "25%";
+      document.getElementById("videoBox").style.left = "0";
+      document.getElementById("videoBox").style.bottom = "0";
+      document.getElementById(chatName).style.bottom = "0";
+      document.getElementById(chatName).style.height = "100%";
+    }
+    else if (check == true && check2 == false){
+      document.getElementById("videoBox").style.width = "95%";
+      document.getElementById("videoBox").style.height = "70%";
+      document.getElementById("videoBox").style.right = "0";
+      document.getElementById("videoBox").style.left = "5%";
+      document.getElementById("videoBox").style.bottom = "30%";
     }
     else{
+      document.getElementById("videoBox").style.height = "100%";
       document.getElementById("videoBox").style.width = "95%";
       document.getElementById("videoBox").style.right = "0";
       document.getElementById("videoBox").style.left = "5%";
+      document.getElementById("videoBox").style.bottom = "0";
     }
   }
 
@@ -494,5 +528,11 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
     document.execCommand('SelectAll');
     document.execCommand("Copy", false, null);
     document.body.removeChild(copyDiv);
+  }
+
+  function showGallery(){
+    $("#paintings").fadeToggle('slow', function(){
+      resizePublisher();
+    });
   }
 }

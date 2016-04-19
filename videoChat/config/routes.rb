@@ -1,6 +1,9 @@
 Rails.application.routes.draw do
   root :to => 'rooms#index'
-  resources :rooms
+  resources :rooms do
+    resources :paintings, :shallow => true
+  end
+
   match '/party/:id', :to => 'rooms#party', :as => :party, :via => :get
   get '/chrome_extension' => 'rooms#downloadChromeExtension'
 

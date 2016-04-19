@@ -23,6 +23,7 @@ class RoomsController < ApplicationController
 
   def party
     @room = Room.find(params[:id])
+    @painting = @room.paintings.new
     @apiKey = "45486522"
     @tok_token = @opentok.generate_token @room.sessionId 
   end
