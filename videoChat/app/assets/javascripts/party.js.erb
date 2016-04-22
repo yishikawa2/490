@@ -273,7 +273,6 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       nameFrom = document.createTextNode(userName);
     else{
       for(var i=0; i<streamObjects.length; i++){
-        alert(streamObjects[i].stream.connection.connectionId + " == " +  event.from.connectionId);
         if(streamObjects[i].stream.connection.connectionId == event.from.connectionId){
           nameFrom = document.createTextNode(streamObjects[i].stream.name);
           break
@@ -311,6 +310,8 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       if(name == "switch"){
         checkStream = false;
         targetStreamID = event.data;
+      }
+      else if(name == "image"){
       }
       else{ 
         $('#chat'+name).append(p1);
@@ -534,5 +535,17 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
     $("#paintings").fadeToggle('slow', function(){
       resizePublisher();
     });
+  }
+  
+  function sendSignalImage(fileName){
+    session.signal(
+      {
+        data: fileName,
+        type: 'image'
+      },
+      function(error) {
+        if (error)
+          alert("signal error (" + error.code + "): " + error.message);
+      });
   }
 }

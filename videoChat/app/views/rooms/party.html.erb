@@ -8,13 +8,562 @@
     window.sessionId = '<%= @room.sessionId %>'
     window.tok_token = '<%= @tok_token %>'
   </script>
+  <script> 
+var sessionId = window.sessionId;
+var token = window.tok_token;
+var apiKey = window.apiKey;
+if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
+  var extensionId = 'kfhfgfdapebdhkgalbmhkpffigndnjal';
+  var session = OT.initSession(apiKey, sessionId);
+  var publisher;
+  var subscribers = [];
+  var connectionObjects = [];
+  var streamObjects = [];
+  var userName = ""
+  var connectionCount = 0;
+  var subCount = 0;
+  var subDiv = null;
+  var targetStreamID = null;
+  var width;
+  var height;
+  var checkStream = true;
+  OT.registerScreenSharingExtension('chrome', extensionId, 2);
+   
+  session.connect(token);
+  
+  session.on("sessionConnected", function sessionConnectedHandler(event) {
+    while (!userName.match(/[a-zA-Z0-9_-]+/))
+      userName = window.prompt("Enter Your Name:")
 
-  <script src=<%= asset_path 'party.js.erb' %>></script>
+    var parDiv = document.createElement('div');
+    parDiv.setAttribute('id', 'publisherContainer');
+    parDiv.style.width = '100%'; 
+    parDiv.style.height = '100%'; 
+    var div = document.createElement('div');
+    div.setAttribute('id', 'publisher');
+    parDiv.appendChild(div);
+    $('#videoBox').append(parDiv);
 
-  <script>
-    $(document).ready(function(){
-      $('#painting_image').fileupload();
+    publisher = OT.initPublisher('publisher', {insertMode:'replace', name:userName});
+    session.publish(publisher);
+  });
+
+  session.on("sessionDisconnected", function(event){
+    alert("The session disconnected. " + event.reason);
+  });
+
+  session.on("streamCreated", function streamCreatedHandler(event) {
+    for (var i = 0; i < event.streams.length; i++) {
+      if (event.streams[i].connection.connectionId != session.connection.connectionId)
+          subscribeToStreams(event.streams[i], event.stream.videoType);
+    }
+    streamObjects.push(event);
+    if(checkStream == true){
+      var div = document.createElement('div');
+      var button = document.createElement('button');
+      div.setAttribute('id', 'textChat' + event.stream.name);
+      div.setAttribute('class', 'textChat');
+      
+      var head = document.createElement('div');
+      var title = document.createElement('h1');
+      var b = document.createElement('b');
+      var chatBox = document.createElement('div');
+      var inputDiv = document.createElement('div');
+      var input = document.createElement('input');
+      var textButton = document.createElement('button');
+      var connection1;
+      var connection2;
+      var name1 = event.stream.name;
+      var name2 = userName;
+      var buttonName;
+      var headName;
+
+      for(var i = 0; i < connectionObjects.length; i++){
+        if(connectionObjects[i].connection.connectionId  == session.connection.connectionId)
+          connection1 = connectionObjects[i];
+        else if(connectionObjects[i].connection.connectionId == event.stream.connection.connectionId)
+          connection2 = connectionObjects[i];
+      }
+      
+      inputDiv.setAttribute('id', 'chatInput');
+      input.setAttribute('id', 'text' + event.stream.name);
+      input.setAttribute('class', 'text');
+      input.setAttribute('type', 'text');
+      input.setAttribute('placeholder', 'Write here...');
+      input.onkeyup = function(e){
+        if(e.keyCode == 13)
+          $("#submit"+name1).click();
+        };
+      textButton.setAttribute('id', 'submit'+event.stream.name);
+      textButton.setAttribute('class', 'btn-primary');
+      textButton.setAttribute('type', 'submit1');
+      textButton.onclick =  function(){
+        var txt = document.getElementById("text" + event.stream.name).value;
+        if (txt != ""){
+          session.signal(
+          {
+            to:connection2.connection,
+            data:txt,
+            type:name2
+          },
+          function(error) {
+            if (error)
+              alert("signal error (" + error.code + "): " + error.message);
+          });
+      
+          session.signal(
+          {
+            to:connection1.connection,
+            data:txt,
+            type:name1
+          },
+          function(error) {
+            if (error)
+              alert("signal error (" + error.code + "): " + error.message);
+          });
+          document.getElementById("text"+event.stream.name).value = "";
+        }
+      };
+      
+      buttonName = "Send";
+      textButton.appendChild(document.createTextNode(buttonName));
+      inputDiv.appendChild(input);
+      inputDiv.appendChild(textButton);
+      div.appendChild(inputDiv);
+
+      chatBox.setAttribute('id', 'chat' + event.stream.name);
+      chatBox.setAttribute('class', 'chat');
+      div.appendChild(chatBox);
+
+      head.setAttribute('id', 'text-head' + event.stream.name);
+      head.setAttribute('class', 'text-head'); 
+      headName = "Text Chat with " + event.stream.name;
+      b.appendChild(document.createTextNode(headName));
+      title.style.textAlign = "center";
+      title.style.color = "white";
+      title.appendChild(b);
+      head.appendChild(title);
+      div.appendChild(head);
+
+      button.setAttribute('id', 'send' + event.stream.name);
+      button.setAttribute('type', 'submit');
+      button.setAttribute('class', 'btn-primary');
+      button.style.width = "100%";
+      buttonName = "Send to " + event.stream.name; 
+      button.appendChild(document.createTextNode(buttonName));
+      button.appendChild(document.createElement("br"));
+      button.onclick = function(){
+        if ($("#textChat").is(":visible"))
+          $("#textChat").fadeToggle('fast');
+
+        for(var i = 0; i < streamObjects.length; i++){
+          if ($("#textChat"+streamObjects[i].stream.name).is(":visible") && streamObjects[i].stream.name != event.stream.name)
+            $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
+        }
+        $('#textChat' + event.stream.name).fadeToggle('slow', function(){
+          resizePublisher();
+        });
+        $("#list").fadeToggle("slow");
+      };
+      document.body.appendChild(div);
+      $('#list').append(button);
+    }
+    if(checkStream == false && event.stream.videoType == 'screen')
+      checkStream = true;
+  });
+
+  session.on("streamDestroyed", function(event){
+    for (var i = 0; i < subscribers.length; i++ ){
+      if(event.stream.streamId == subscribers[i].stream.streamId)
+        subscribers.splice(i, 1);
+    }
+    if(checkStream == true){
+      var targetButton = document.getElementById("send" + event.stream.name);
+      var targetDiv = document.getElementById("textChat" + event.stream.name);
+      subDiv = document.getElementById("stream" + event.stream.streamId).parentElement;
+      targetDiv.remove();
+      targetButton.remove();
+    }
+    if(checkStream == false && event.stream.videoType == 'screen')
+      checkStream = true; 
+  });
+
+  session.on("connectionCreated", function(event){
+    connectionObjects.push(event);
+    connectionCount += 1
+    var pubDiv = document.getElementById('publisherContainer');
+    if(connectionCount == 1){
+      pubDiv.style.width = '100%';
+      pubDiv.style.height = '100%';
+      publisher.element.style.width = "100%";
+      publisher.element.style.height = "100%";
+    }
+    else{
+      var remain = connectionCount%2;
+      var connectionNum;
+      if(remain == 0)
+        connectionNum = connectionCount;
+      else
+        connectionNum = connectionCount + 1;
+      
+      var num = 100/(connectionNum/2);
+      var numPer = num + "%";
+
+      var newDiv = document.createElement('div');
+      newDiv.style.float = "left";
+      subCount += 1;
+      newDiv.setAttribute('id',"subscriberContainer" + subCount.toString());
+      newDiv.style.width = "50%";
+      newDiv.style.height = numPer;
+      $('#videoBox').append(newDiv);
+      pubDiv.style.width = '50%';
+      pubDiv.style.height = numPer;
+      publisher.element.style.width = "100%";
+      publisher.element.style.height = "100%";
+    }
+  });
+
+  session.on("connectionDestroyed", function(event){
+    connectionCount -= 1;
+    var subDivId = subDiv.id
+    if($("#"+subDivId).is(":visible")){
+      document.getElementById("videoBox").style.width = "95%";
+      document.getElementById("videoBox").style.right = "0";
+      document.getElementById("videoBox").style.left = "5%";
+    }
+    subDiv.remove();
+    subDiv = null; 
+    for (var i = 0; i < connectionObjects.length; i++ ){
+      if(event.connection.connectionId == connectionObjects[i].connection.connectionId)
+        connectionObjects.splice(i, 1);
+    }
+    var pubDiv = document.getElementById('publisherContainer');
+    if(connectionCount == 1){
+      pubDiv.style.width = '100%';
+      pubDiv.style.height = '100%';
+      publisher.element.style.width = "100%";
+      publisher.element.style.height = "100%";
+    }
+    else{
+      var remain = connectionCount%2;
+      var connectionNum;
+      if(remain == 0)
+        connectionNum = connectionCount;
+      else
+        connectionNum = connectionCount + 1;
+
+      var num = 100/(connectionNum/2);
+      var numPer = num + "%";
+      pubDiv.style.width = '50%';
+      pubDiv.style.height = numPer;
+      publisher.element.style.width = "100%";
+      publisher.element.style.height = "100%";
+      for(var i=1; i<=subCount; i++){
+        var checkSub = document.getElementById('subscriberContainer'+i.toString());
+        if(checkSub != null){
+          checkSub.style.width = '50%';
+          checkSub.style.height = numPer;
+        }
+      }
+      for(var i=0; i < subscribers.length; i++){
+        var subscribeDiv = document.getElementById('stream'+subscribers[i].stream.streamId)
+        subscribeDiv.style.height = numPer;
+        subscribers[i].element.style.width = '100%';
+        subscribers[i].element.style.height = '100%';
+      }
+    }
+  });
+
+  session.on("signal", function(event) {
+    var div = document.createElement('div');
+    var nameFrom;
+    var p1 = document.createElement('p');
+    var p2 = document.createElement('p');
+    var text = document.createTextNode(event.data);
+    if(session.connection.connectionId == event.from.connectionId)
+      nameFrom = document.createTextNode(userName);
+    else{
+      for(var i=0; i<streamObjects.length; i++){
+        if(streamObjects[i].stream.connection.connectionId == event.from.connectionId){
+          nameFrom = document.createTextNode(streamObjects[i].stream.name);
+          break
+        }   
+      }
+    }
+    if(event.from.connectionId  == session.connection.connectionId)
+      div.setAttribute('class', 'bubble');
+    else
+      div.setAttribute('class', 'speech');
+    p1.appendChild(nameFrom); 
+    p2.appendChild(document.createElement("br"));
+    p2.appendChild(text);
+    p2.appendChild(document.createElement("br"));
+    p2.appendChild(document.createElement("br"));
+    p2.style.fontSize = "large";
+    div.appendChild(p2);
+    if(event.type == "signal"){
+      $('#chat').append(p1);
+      $('#chat').append(div);
+      $('#chat').append('<br>');
+      for(var i = 0; i < streamObjects.length; i++){
+        if($("#textChat"+streamObjects[i].stream.name).is(":visible"))
+          $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
+      }
+      if($("#textChat").is(":hidden")){
+        $("#textChat").fadeToggle("slow", function(){
+          resizePublisher();
+        });
+      }
+    }
+    else{
+      var type = event.type;
+      var name = type.substring(7);
+      if(name == "switch"){
+        checkStream = false;
+        targetStreamID = event.data;
+      }
+      else if(name == "image"){
+        alert("Signal sent")
+        $("#gallary").append("<%= j render @room.paintings %>");
+        alert("shared")
+      }
+      else{ 
+        $('#chat'+name).append(p1);
+        $('#chat'+name).append(div);
+        $('#chat'+name).append('<br>');
+        for(var i = 0; i < streamObjects.length; i++){
+          if(name == streamObjects[i].stream.name){
+            if($("#textChat"+streamObjects[i].stream.name).is(":hidden")){
+              $("#textChat"+streamObjects[i].stream.name).fadeToggle('slow', function(){
+                resizePublisher();
+              });
+            }
+          }
+          else{
+            if($("#textChat"+streamObjects[i].stream.name).is(":visible"))
+              $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
+          }
+        }
+        if($("#textChat").is(":visible"))
+          $("#textChat").fadeToggle("fast");
+      }
+    }
+  });
+
+  function subscribeToStreams(stream, type) {
+    for(var i=1; i<=subCount; i++){
+      var parentDiv = document.getElementById('subscriberContainer' + i.toString());
+      if(parentDiv != null){
+        if(targetStreamID != null && type == 'camera'){
+            var tempId = parentDiv.childNodes[0].id;
+            var childDiv = parentDiv.childNodes[0];
+            if(tempId == targetStreamID)
+              childDiv.remove() 
+        }
+        if($('#subscriberContainer'+i.toString()).is(':empty')){
+          var div = document.createElement('div');
+          div.setAttribute('id', 'stream' + stream.streamId);
+          document.getElementById('subscriberContainer' + i).appendChild(div);
+          var remain = connectionCount%2;
+          var connectionNum;
+          if(remain == 0)
+            connectionNum = connectionCount;
+          else
+            connectionNum = connectionCount + 1;
+
+          var num = 100/(connectionNum/2);
+          var numPer = num + "%";
+          for(var i=0; i < subscribers.length; i++){
+            var parDiv;
+            if('stream'+subscribers[i].stream.streamId  != targetStreamID){
+              parDiv = document.getElementById('stream'+subscribers[i].stream.streamId).parentElement;
+              parDiv.style.width = '50%';
+              parDiv.style.height = numPer;
+              subscribers[i].element.style.width = '100%';
+              subscribers[i].element.style.height = '100%';
+            }
+          }
+          targetStreamId = null;
+          var subscriber;
+          subscriber = session.subscribe(stream, div.id, {width:'100%', height:'100%'});
+          subscribers.push(subscriber);
+          break
+        }
+      }
+    }
+  }
+
+  function screenshare() {
+    OT.checkScreenSharingCapability(function(response) {
+      if (!response.supported || response.extensionRegistered === false)
+        alert('This browser does not support screen sharing.'); 
+      else if (response.extensionInstalled === false) 
+        alert('Please install the screen sharing extension and load your app over https.');
+      else {
+        // Screen sharing is available. Publish the screen.
+        
+        var streamID = 'stream' + publisher.stream.streamId;
+        
+        for(var i = 0; i < connectionObjects.length; i++){
+          if(connectionObjects[i].connection.connectionId  != session.connection.connectionId){
+            session.signal(
+            {
+              to:connectionObjects[i].connection,
+              data:streamID,
+              type:"switch"
+            },
+            function(error) {
+              if (error)
+                alert("signal error (" + error.code + "): " + error.message);
+            }); 
+          }
+        }
+        publisher.on('streamDestroyed', function(event){
+          if (event.reason == "unpublished" && event.stream.videoType == "screen"){
+            event.preventDefault();
+            publisher = OT.initPublisher('publisher', {/*insertMode:'replace',*/ name:userName, width:width, height:height});
+            session.publish(publisher, function(error) {
+              if (error)
+                alert('Could not share the screen: ' + error.message);
+            });
+          }
+          else if (event.reason == "unpublished" && event.stream.videoType == "camera"){
+            event.preventDefault();
+            publisher = OT.initPublisher('publisher', {insertMode:'replace', videoSource: 'screen', name:userName, width:width, height:height});
+            session.publish(publisher, function(error) {
+              if (error)
+                alert('Could not share the screen: ' + error.message);
+            });
+          }
+        });
+        width = publisher.element.style.width;
+        height = publisher.element.style.height;
+        session.unpublish(publisher);
+      }
     });
+  }
+
+  function resizePublisher() {
+    var check = true;
+    var check2 = true;
+    var chatName = "";
+    for(var i = 0; i < streamObjects.length; i++){
+      if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
+        check = false;
+        chatName = "textChat" + streamObject[i];
+      }
+    }
+    if ($("#textChat").is(":visible")){
+      check = false;
+      chatName = "textChat";
+    }
+    if ($("#paintings").is(":visible"))
+      check2 = false;
+    
+    if (check == false && check2 == false){
+      document.getElementById("videoBox").style.height = "70%";
+      document.getElementById("videoBox").style.width = "65%";
+      document.getElementById("videoBox").style.right = "25%";
+      document.getElementById("videoBox").style.left = "0";
+      document.getElementById("videoBox").style.bottom = "30%";
+      document.getElementById(chatName).style.bottom = "30%";
+      document.getElementById(chatName).style.height = "70%";
+      
+    }
+    else if (check == false && check2 == true){
+      document.getElementById("videoBox").style.height = "100%";
+      document.getElementById("videoBox").style.width = "65%";
+      document.getElementById("videoBox").style.right = "25%";
+      document.getElementById("videoBox").style.left = "0";
+      document.getElementById("videoBox").style.bottom = "0";
+      document.getElementById(chatName).style.bottom = "0";
+      document.getElementById(chatName).style.height = "100%";
+    }
+    else if (check == true && check2 == false){
+      document.getElementById("videoBox").style.width = "95%";
+      document.getElementById("videoBox").style.height = "70%";
+      document.getElementById("videoBox").style.right = "0";
+      document.getElementById("videoBox").style.left = "5%";
+      document.getElementById("videoBox").style.bottom = "30%";
+    }
+    else{
+      document.getElementById("videoBox").style.height = "100%";
+      document.getElementById("videoBox").style.width = "95%";
+      document.getElementById("videoBox").style.right = "0";
+      document.getElementById("videoBox").style.left = "5%";
+      document.getElementById("videoBox").style.bottom = "0";
+    }
+  }
+
+  function sendSignalToAll(){
+    var txt = document.getElementById("text").value;
+    if (txt != ""){
+      session.signal(
+      {
+        data:txt
+      },
+      function(error) {
+        if (error)
+          alert("signal error (" + error.code + "): " + error.message);
+        else
+          document.getElementById("text").value = "";
+      });
+    }
+  }
+    
+  function showTextChatForAll(){  
+    for(var i = 0; i < streamObjects.length; i++){
+      if ($("#textChat"+streamObjects[i].stream.name).is(":visible"))
+        $("#textChat"+streamObjects[i].stream.name).fadeToggle('fast');
+    }
+    $("#textChat").fadeToggle('slow', function(){
+      resizePublisher();
+    });
+    $("#list").fadeToggle("slow");
+  }
+
+  $(document).ready(function(){
+    $("#chatButton").click(function(){
+      $("#list").fadeToggle('slow');
+    });
+     
+    $("#text").keyup(function(event){
+      if(event.keyCode==13)
+        $("#submit").click();
+    }); 
+  });
+
+  function copyToClipboard(text){
+    var copyDiv = document.createElement('div');
+    copyDiv.contentEditable = true;
+    document.body.appendChild(copyDiv);
+    copyDiv.innerHTML = text;
+    copyDiv.unselectable = "off";
+    copyDiv.focus();
+    document.execCommand('SelectAll');
+    document.execCommand("Copy", false, null);
+    document.body.removeChild(copyDiv);
+  }
+
+  function showGallery(){
+    $("#paintings").fadeToggle('slow', function(){
+      resizePublisher();
+    });
+  }
+
+ function sendSignalImage(fileName){
+    session.signal(
+      {
+        data: fileName,
+        type: 'image'
+      },
+      function(error) {
+        if (error)
+          alert("signal error (" + error.code + "): " + error.message);
+      });
+ } 
+
+}
   </script>
 </head>
 
@@ -50,31 +599,38 @@
   </div>
 
   <div id="paintings">
-    <div class="painting" style="display:inline-block; bottom:30%;">
-      <!--<%= link_to "Add Image", new_room_painting_path(:room_id => @room.id) %>-->
-      <%= form_for([@room,@painting]) do |f| %>
+    <div id="newPainting" class="newPainting" style="display:inline-block;">
+      <%= form_for [@room,@painting], :html => {:multipart => true}, :remote => true do |f| %>
         <%= f.label :image, "Upload paintings" %>
         <%= f.file_field :image, multiple: true, name: "painting[image]" %>
       <% end %>
     </div>
-    <script id="templete-upload", type="text/x-tmpl">
+
+    <script id="template-upload" type="text/x-tmpl">
       <div class="upload">
         {%=o.name%}
-        <div class="progress"><div class="bar" style="width:0%"></div></div>
-      </div>
-    </script>
-    <% @room.paintings.each do |painting| %>
-      <% if !painting.new_record? %>
-      <div class="painting" style="display:inline-block;">
-        <%= image_tag painting.image_url(:thumb).to_s %>
-        <div class="name"><%= painting.name %></div>
-        <div class="actions">
-          <%= link_to "edit", edit_painting_path(@room, painting) %> |
-          <%= link_to 'remove', painting, method: :delete, data: {confirm: 'Are you sure?'} %>
+        <div class="progress">
+          <div class="bar" style="width: 0%;">
+          </div>
         </div>
       </div>
-      <% end %>
-    <% end %>
+    </script>
+    <div id="gallary">
+      <!--<% @room.paintings.each do |painting| %>
+        <% if !painting.new_record? %>
+          <div class="painting" style="display:inline-block;">
+            <% painting.public = true %>
+            <%= image_tag painting.image_url(:thumb).to_s %>
+            <div class="name"><%= painting.name %></div>
+            <div class="actions">
+              <%= link_to "edit", edit_painting_path(painting) %> |
+              <%= link_to 'remove', painting, method: :delete, data: {confirm: 'Are you sure?'} %>
+            </div>
+          </div>
+        <% end %>
+      <% end %>-->
+      <%= render 'paintings/painting' %>
+    </div>
   </div>
 </body>
 </html>

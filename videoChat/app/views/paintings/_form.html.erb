@@ -1,0 +1,6 @@
+<%= form_for([@room, @painting]) do |f| %>
+  <%= f.hidden_field :room_id %>
+  <%= f.file_field :image, multiple: true, name: "painting[image]" %>
+  <%= f.text_field :name %>
+  <%= f.submit %>
+<% end %>
