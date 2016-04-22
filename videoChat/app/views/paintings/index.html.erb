@@ -1,0 +1,14 @@
+<% @room.paintings.each do |painting| %>
+  <% if !painting.new_record? %>
+    <div class="painting" style="display:inline-block;">
+      <% painting.public = true %>
+      <%= image_tag painting.image_url(:thumb).to_s %>
+      <div class="name"><%= painting.name %></div>
+      <div class="actions">
+        <%= link_to "edit", edit_painting_path(painting) %> |
+        <%= link_to 'remove', painting, method: :delete, data: {confirm: 'Are you sure?'} %>
+      </div>
+    </div>
+  <% end %>
+<% end %>
+

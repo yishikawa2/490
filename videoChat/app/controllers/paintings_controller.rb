@@ -1,5 +1,9 @@
 class PaintingsController < ApplicationController
 
+  def index
+    @room = Room.find params[:room_id]
+  end
+
   def new
     @room = Room.find params[:room_id]
     @painting = @room.paintings.new()
@@ -8,8 +12,10 @@ class PaintingsController < ApplicationController
   def create
     @room = Room.find params[:room_id]
     @painting = @room.paintings.create(params.require(:painting).permit(:name, :room_id, :image))
-    respond_to do |format|
-      format.js
+    if @painting.save
+      respond_to do |format|
+        format.js
+      end
     end
     #if @painting.save
       #render :json => @painting.to_json
