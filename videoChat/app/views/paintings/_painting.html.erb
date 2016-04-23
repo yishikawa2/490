@@ -1,13 +1,11 @@
 <% @room.paintings.each do |painting| %>
   <% if !painting.new_record? %>
-    <div class="painting" style="display:inline-block;">
+    <div class="painting" style="display:inline-block; background-color:white;">
       <% painting.public = true %>
       <%= image_tag painting.image_url(:thumb).to_s %>
       <div class="name"><%= painting.name %></div>
       <div class="actions">
-        <!--<%= link_to "edit", edit_painting_path(painting) %> |
-        <%= link_to 'remove', painting, method: :delete, data: {confirm: 'Are you sure?'} %>-->
-        <button type="button" id="imageDelete" class="btn-primary" onclick="deleteImage('<%= painting.id %>')">Delete</button>
+        <button type="button" id="imageDelete" class="btn-primary" onclick="deleteImage('<%= @room.id %>', '<%= painting.id %>')">Delete</button>
         
       </div>
     </div>
