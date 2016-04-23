@@ -1,7 +1,7 @@
 var sessionId = window.sessionId;
 var token = window.tok_token;
 var apiKey = window.apiKey;
-if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
+if ( sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
   var extensionId = 'kfhfgfdapebdhkgalbmhkpffigndnjal';
   var session = OT.initSession(apiKey, sessionId);
   var publisher;
@@ -537,10 +537,10 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
     });
   }
   
-  function sendSignalImage(fileName){
+  function sendSignalImage(){
     session.signal(
       {
-        data: fileName,
+        data: "imageData",
         type: 'image'
       },
       function(error) {
