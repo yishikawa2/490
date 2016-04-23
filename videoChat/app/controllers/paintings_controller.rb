@@ -45,7 +45,12 @@ class PaintingsController < ApplicationController
 
   def destroy
     @painting = Painting.find(params[:id])
-    @painting.destroy
-    redirect_to party_path(@painting.room), notice: '<font color="red">Painting was successfully destroyed</font>'
+    @room = @painting.room
+    if @painting.destroy
+      respond_to do |format|
+        format.js
+      end
+    end
+    #redirect_to party_path(@painting.room), notice: '<font color="red">Painting was successfully destroyed</font>'
   end
 end

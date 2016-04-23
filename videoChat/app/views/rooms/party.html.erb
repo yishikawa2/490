@@ -294,15 +294,20 @@
         else
           div.setAttribute('class', 'speech');
         p1.appendChild(nameFrom); 
+        p2.setAttribute('align', 'center');
         p2.appendChild(document.createElement("br"));
         p2.appendChild(text);
         p2.appendChild(document.createElement("br"));
         p2.appendChild(document.createElement("br"));
         p2.style.fontSize = "large";
         div.appendChild(p2);
+        var wraper = document.createElement('div')
+        wraper.setAttribute('id', 'textWrap');
+        wraper.setAttribute('class', 'textWrap');
+        wraper.appendChild(p1);
+        wraper.appendChild(div);
         if(event.type == "signal"){
-          $('#chat').append(p1);
-          $('#chat').append(div);
+          $('#chat').append(wraper);
           $('#chat').append('<br>');
           for(var i = 0; i < streamObjects.length; i++){
             if($("#textChat"+streamObjects[i].stream.name).is(":visible"))
@@ -548,8 +553,15 @@
       function sendSignalImage(){
         $.ajax({
           type:'GET',
-          url: 'https://bikkun.com/videoChat/rooms/<%= @room.id %>/paintings',
+          url: 'https://bikkun.com/videoChat/rooms/<%= @room.id %>/paintings'
         });  
+      }
+ 
+      function deleteImage(painting){
+        $.ajax({
+          type:'DELETE',
+          url: 'https://bikkun.com/videoChat/paintings/' + painting
+        });
       }
     }    
   </script>
