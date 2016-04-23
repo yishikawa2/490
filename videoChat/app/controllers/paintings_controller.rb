@@ -2,6 +2,12 @@ class PaintingsController < ApplicationController
 
   def index
     @room = Room.find params[:room_id]
+    
+    respond_to do |format|
+      format.js
+      format.html
+    end
+    
   end
 
   def new
@@ -15,6 +21,7 @@ class PaintingsController < ApplicationController
     if @painting.save
       respond_to do |format|
         format.js
+        format.html
       end
     end
     #if @painting.save

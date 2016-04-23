@@ -2,6 +2,4 @@
   alert("Filed to upload painting: <%= j @painting.errors.full_massages.join(', ').html_safe %>");
 <% else %>
   $("#gallary").html("<%= j render 'painting' %>");
-  <% @temp = j render 'painting' %>
-  //$("#newPainting").append("<input type='button' value='share' onclick='sendSignalImage(<%= @temp %>)' />")
 <% end %>

@@ -321,15 +321,10 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
         targetStreamID = event.data;
       }
       else if(name == "image"){
-        alert("signal recieved");
-        <% @room = Room.find params[:id] %>
-        <% @room.paintings.each do |painting| %>
-          <% if !painting.new_record? %>
-            alert("<%= painting.name %>")
-          <% end %>
-        <% end %> 
-        $("#gallary").html(event.data);
-        alert("shared")
+        $.ajax({
+          type:'GET',
+          url: 'https://bikkun.com/videoChat/rooms/<%= @room.id %>/paintings',
+        });
       }
       else{ 
         $('#chat'+name).append(p1);
@@ -555,17 +550,16 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
     });
   }
 
- function sendSignalImage(fileName){
+ function sendSignalImage(){
     session.signal(
       {
-        data: fileName,
+        to: session.connection,
+        data: 'imageData',
         type: 'image'
       },
       function(error) {
         if (error)
           alert("signal error (" + error.code + "): " + error.message);
-        else
-          alert("signal sent");
       });
  } 
 
@@ -606,6 +600,7 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
 
   <div id="paintings">
     <div id="newPainting" class="newPainting" style="display:inline-block;">
+      <button type="button" id="imageReload" class="btn-primary" onclick="sendSignalImage()">Reload</button>
       <%= form_for [@room,@painting], :html => {:multipart => true}, :remote => true do |f| %>
         <%= f.label :image, "Upload paintings" %>
         <%= f.file_field :image, multiple: true, name: "painting[image]" %>
@@ -622,19 +617,6 @@ if (sessionId != "undefined" && token != "undefined" && apiKey != "undefined"){
       </div>
     </script>
     <div id="gallary">
-      <!--<% @room.paintings.each do |painting| %>
-        <% if !painting.new_record? %>
-          <div class="painting" style="display:inline-block;">
-            <% painting.public = true %>
-            <%= image_tag painting.image_url(:thumb).to_s %>
-            <div class="name"><%= painting.name %></div>
-            <div class="actions">
-              <%= link_to "edit", edit_painting_path(painting) %> |
-              <%= link_to 'remove', painting, method: :delete, data: {confirm: 'Are you sure?'} %>
-            </div>
-          </div>
-        <% end %>
-      <% end %>-->
       <%= render 'paintings/painting' %>
     </div>
   </div>
