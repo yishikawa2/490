@@ -326,6 +326,12 @@
             checkStream = false;
             targetStreamID = event.data;
           }
+          else if(name == "image"){
+            $.ajax({
+              type:'GET',
+              url: 'https://bikkun.com/videoChat/rooms/<%= @room.id %>/paintings'
+            });
+          }
           else{ 
             $('#chat'+name).append(p1);
             $('#chat'+name).append(div);
@@ -449,16 +455,18 @@
         for(var i = 0; i < streamObjects.length; i++){
           if($("#textChat"+streamObjects[i].stream.name).is(":visible")){
             check = false;
-            chatName = "textChat" + streamObject[i];
+            chatName = "textChat" + streamObjects[i].stream.name;
+            break;
           }
         }
-        if ($("#textChat").is(":visible")){
-          check = false;
-          chatName = "textChat";
+        if(check == true ){
+          if ($("#textChat").is(":visible")){
+            check = false;
+            chatName = "textChat";
+          }
         }
         if ($("#paintings").is(":visible"))
           check2 = false;
-        
         if (check == false && check2 == false){
           document.getElementById("videoBox").style.height = "70%";
           document.getElementById("videoBox").style.width = "65%";
@@ -562,6 +570,21 @@
           type:'DELETE',
           url: 'https://bikkun.com/videoChat/paintings/' + painting
         });
+
+        for(var i = 0; i < connectionObjects.length; i++){
+          if(connectionObjects[i].connection.connectionId  != session.connection.connectionId){
+            session.signal(
+            {
+              to:connectionObjects[i].connection,
+              data:'image',
+              type:'image'
+            },
+            function(error) {
+              if (error)
+                alert("signal error (" + error.code + "): " + error.message);
+            }); 
+          }
+        }
       }
     }    
   </script>
