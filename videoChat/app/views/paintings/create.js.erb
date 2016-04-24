@@ -2,4 +2,7 @@
   alert("Filed to upload painting: <%= j @painting.errors.full_massages.join(', ').html_safe %>");
 <% else %>
   $("#gallary").html("<%= j render 'painting' %>");
+  if ($("#newImageForm").is(":visible")){
+    $("#newImageForm").fadeToggle('fast');
+  }
 <% end %>

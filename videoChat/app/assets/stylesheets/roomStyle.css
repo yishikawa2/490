@@ -1,3 +1,44 @@
+.myText{
+  position:relative;
+  left:30%;
+  right:0;
+  top:0;
+  bottom:0;
+  margin:auto;
+  width:25%;
+  font-weight: bold;
+}
+
+.otherText{
+  position:relative;
+  right:60%;
+  left:0;
+  top:0;
+  bottom:0;
+  margin:auto;
+  font-weight: bold;
+}
+
+#otherTextWrap{
+  position:relative;
+  left:0;
+  right:20%;
+  top:0;
+  bottom:0;
+  margin:auto;
+  width:70%;
+}
+
+#myTextWrap{
+  position:relative;
+  left:20%;
+  right:0;
+  top:0;
+  bottom:0;
+  margin:auto;
+  width:50%;
+}
+
 #paintings{
   display: none; 
   position:absolute;
@@ -10,7 +51,7 @@
   margin:auto;
   overflow-x:auto;
   white-space: nowrap;
-  background-color: black;
+  background-color: lightblue;
 }
 
 #videoBox{
@@ -148,7 +189,7 @@ button[type="submit1"]{
 
 .speech {
   position: relative;
-  width: 50px;
+  width: 150px;
   padding: 1px;
   background: #47FF43;
   -webkit-border-radius: 32px;

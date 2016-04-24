@@ -270,33 +270,43 @@
         var p2 = document.createElement('p');
         var text = document.createTextNode(event.data);
         if(session.connection.connectionId == event.from.connectionId)
-          nameFrom = document.createTextNode(userName);
+          nameFrom = document.createTextNode("Me:");
         else{
           for(var i=0; i<streamObjects.length; i++){
             if(streamObjects[i].stream.connection.connectionId == event.from.connectionId){
-              nameFrom = document.createTextNode(streamObjects[i].stream.name);
+              nameFrom = document.createTextNode("From " + streamObjects[i].stream.name + ":" );
               break
             }   
           }
         }
-        if(event.from.connectionId  == session.connection.connectionId)
-          div.setAttribute('class', 'bubble');
-        else
-          div.setAttribute('class', 'speech');
         p1.appendChild(nameFrom); 
+        var wraper = document.createElement('div')
+        if(event.from.connectionId  == session.connection.connectionId){
+          div.setAttribute('class', 'bubble');
+          p1.setAttribute('class', 'myText');
+          wraper.setAttribute('id', 'myTextWrap');
+        }
+        else{
+          div.setAttribute('class', 'speech');
+          p1.setAttribute('class', 'otherText');
+          wraper.setAttribute('id', 'otherTextWrap');
+        }
         p2.setAttribute('align', 'center');
         p2.appendChild(document.createElement("br"));
         p2.appendChild(text);
         p2.appendChild(document.createElement("br"));
         p2.appendChild(document.createElement("br"));
         p2.style.fontSize = "large";
+        p1.style.fontSize = "x-large";
         div.appendChild(p2);
-        var wraper = document.createElement('div')
-        wraper.setAttribute('id', 'textWrap');
-        wraper.setAttribute('class', 'textWrap');
-        wraper.appendChild(p1);
+        if(event.from.connectionId  == session.connection.connectionId){
+          wraper.appendChild(p1);
+        }
         wraper.appendChild(div);
         if(event.type == "signal"){
+          if(event.from.connectionId  != session.connection.connectionId){
+            $('#chat').append(p1);  
+          }
           $('#chat').append(wraper);
           $('#chat').append('<br>');
           for(var i = 0; i < streamObjects.length; i++){
@@ -323,8 +333,10 @@
             });
           }
           else{ 
-            $('#chat'+name).append(p1);
-            $('#chat'+name).append(div);
+            if(event.from.connectionId  != session.connection.connectionId){
+              $('#chat'+name).append(p1);
+            }
+            $('#chat'+name).append(wraper);
             $('#chat'+name).append('<br>');
             for(var i = 0; i < streamObjects.length; i++){
               if(name == streamObjects[i].stream.name){
