@@ -28,6 +28,12 @@ class RoomsController < ApplicationController
     @tok_token = @opentok.generate_token @room.sessionId 
   end
 
+  def destroy
+    @room = Room.find(params[:id])
+    @room.destroy
+    redirect_to root_url, notice: '<font color="red">Room was successfully removed</font>'
+  end
+
   def downloadChromeExtension
     @file_name = "chrome_extension.zip"
     @filePath = Rails.root.join('public', @file_name)

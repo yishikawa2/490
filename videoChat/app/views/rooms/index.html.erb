@@ -3,29 +3,27 @@
   <title>Video Chat</title>
   <style>
     #welcome{
-      display:inline-block;
-      position:absolute; 
+      position:relative; 
       top:0;
-      bottom:80%;
+      bottom:0;
       left:0;
       right:0;
-      width:30%;
-      height:10%;
+      width:100%;
       margin:auto;
+      font-size: 10vh;
     }   
  
-    #newRoom{
-      display:inline-block;
-      position:absolute; 
+    #newRoom{      
+      position:relative; 
       top:0;
-      bottom:30%;
+      bottom:0;
       left:0;
       right:0;
       width:60%;
-      height:30%;
       margin:auto;
       background-color:white;
       opacity:0.8;
+      font-size: 5vh;
     }
 
     .field input[type=text] {
@@ -37,6 +35,7 @@
       border-radius:2px;
       width:60%;
       height:20%;
+      font-size: 5vh;
     }
 
     .field input[type=submit] {
@@ -48,26 +47,28 @@
       border-radius:2px;
       width:30%;
       height:20%;
+      font-size: 5vh;
     }
 
     #partyRoom{
       display:inline-block;
-      position:absolute; 
-      top:40%;
+      position:relative; 
+      top:0;
       bottom:0;
-      left:0;
-      right:30%;
+      left:20%;
+      right:0;
       width:25%;
       height:30%;
       margin:auto;
       background-color:white;
       opacity:0.8;
+      font-size: 3vh;
     }
   
     #extensions{
       display:inline-block;
-      position:absolute;
-      top:40%;
+      position:relative;
+      top:0;
       bottom:0;
       left:30%;
       right:0;
@@ -76,44 +77,56 @@
       margin:auto;
       background-color:white;
       opacity:0.8;
+      font-size: 3vh;
     }
   </style>
 </head>
 
 <body>
+  <br><br><br>
   <div id="welcome">
-    <h1><font color="black" size="7">Welcome to VCHAT</font><h1>
+    <p align='center'>Welcome to VCHAT<p>
   </div>
+  <br><br><br>
   <div id="newRoom">
+    <br><p align="center" style="font-size: 8vh;">New party room</p><br>
     <% if notice != nil %>
       <p id="notice", align="center"><%= notice.html_safe %></p>
     <% end %>
-    <font size="6">New party room</font><br>
     <%= form_for(@new_room, :html => {:class => 'field'}) do |f| %>
       
-        <font size="5">Party Name: </font><br><%= f.text_field :name, :placeholder => "Enter a room name" %>
+        <p>Party Name: <br><%= f.text_field :name, :placeholder => "Enter a room name" %>
         <%= f.submit "Create", :class => 'btn-primary' %>
+        </p>
      
     <% end %>
+    <br>
   </div>
+
   <br>
-  <div id="partyRoom">
-    <font size="5">Existing party rooms</font><br><br>
+  <div id="partyRoom" align="center">
+    <p align='center' style="font-size: 5vh;">Existing party rooms</p><br><br>
     <% if @rooms != nil %>
       <% @count=0 %>
       <% @rooms.each do |room| %>
-        <li style="float:left;"><font size="3"><%= link_to h(room.name), :action => 'party', :id => room %></font></li>
+        <li>
+          <%= link_to h(room.name), :action => 'party', :id => room %> | 
+            <%= link_to "Remove", room, method: :delete, data: { confirm: 'Are you sure?', }%>
+        </li>
         <% @count += 1 %>
       <% end %>
     <% end %>
     <% if @count == 0 %> 
-      <p style="text-align:center;"><br><br><font size="5">NO ROOM</font></p>
+      NO ROOM
     <% end %>
+    <br><br>
   </div>
   <div id='extensions'>
-    <font size="5">Download Extensions For Screen Share</font><br>
+    <p align='center' style="font-size: 5vh;">Download Extensions For Screen Share</p><br>
     <li>
       Extension for Chrome <%= link_to "here", {:controller =>"rooms", :action => "downloadChromeExtension"} %>
     </li>
+    <br><br>
   </div>
+  <br><br>
 </body>
