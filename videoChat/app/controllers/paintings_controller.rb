@@ -1,13 +1,15 @@
 class PaintingsController < ApplicationController
 
   def index
-    @room = Room.find params[:room_id]
-    
+    @room = Room.find params[:room_id] 
     respond_to do |format|
       format.js
-      format.html
     end
     
+  end
+
+  def show
+    @painting = Painting.find(params[:id])
   end
 
   def new
@@ -21,13 +23,8 @@ class PaintingsController < ApplicationController
     if @painting.save
       respond_to do |format|
         format.js
-        format.html
       end
     end
-    #if @painting.save
-      #render :json => @painting.to_json
-      #redirect_to party_path(@painting.room)
-    #end
   end
  
   def edit
@@ -51,6 +48,5 @@ class PaintingsController < ApplicationController
         format.js
       end
     end
-    #redirect_to party_path(@painting.room), notice: '<font color="red">Painting was successfully destroyed</font>'
   end
 end

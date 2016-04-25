@@ -109,7 +109,7 @@
 #list{
   display:none;
   position:absolute; 
-  top:5%;
+  top:12%;
   bottom:0;
   left:5%;
   width:8%;
@@ -153,7 +153,7 @@ input[class="text"]{
   right:0;
   width:80%;
   height:100%;
-  font-size: 5vh;
+  font-size: 4vh;
 }
 
 button[type="submit1"]{

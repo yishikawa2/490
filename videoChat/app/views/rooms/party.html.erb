@@ -29,10 +29,10 @@
     </div>
   </div>
 
-  <div id="options">  
+  <div id="options" style='margin:auto'>  
     <input type="image" title="Copy URL" src="<%= asset_path 'copy-link.jpg' %>" alt="submit" width="100%" height="5%" onclick="copyToClipboard('https://bikkun.com/videoChat/party/<%=@room.id%>-<%=@room.name%>')">
+    <input id="screenShaeButton" title="Change to Screen Share" type="image" src= "<%= asset_path 'swap.png' %>" alt="submit" width="100%" height="5%" onclick="screenshare()">
     <input id="chatButton" title="Text Chet" type="image" src= "<%= asset_path 'text.jpg' %>" alt="submit" width="100%" height="5%">
-    <input id="chatButton" title="Change to Screen Share" type="image" src= "<%= asset_path 'swap.png' %>" alt="submit" width="100%" height="5%" onclick="screenshare()">
     <input type="image" title="Gallery" src="<%= asset_path 'image.png' %>" alt="submit" width="100%" height="5%" onclick="showGallery()">
   </div>
 
@@ -40,17 +40,18 @@
       <button class="btn-primary" type="submit" id="sendAll" style="width:100%" onclick="showTextChatForAll()">Send to All<br></button>
   </div>
 
+        
   <div id="paintings">
-    <div id="newPainting" class="newPainting" style="display:inline-block;">
-      <p style="color:white;">Shared Images:</p>
-      <button type="button" id="imageReload" class="btn-primary" onclick="sendSignalImage('<%= @room.id  %>')">Reload</button>    
-      <button type="button" id="showNewUploadfile" class="btn-primary" onclick="showNewImage()">Add Files...</button>
-      <div id="newImageForm" style="display:none">
-        <%= form_for [@room,@painting], :html => {:multipart => true, :style => 'color: white;'}, :remote => true do |f| %>
-          <%= f.label :image, "Upload paintings" %>
+    <div id="newPainting" class="newPainting">
+      <p style="color:black;"><b>Shared Images:</b></p>
+      <button type="button" id="imageReload" class="btn-primary" onclick="sendSignalImage('<%= @room.id  %>')" style='display:inline-block;'>Reload</button>    
+        <%= form_for [@room,@painting], :html => {:multipart => true, :style => 'color: white; display:inline-block'}, :remote => true do |f| %>
+        <span class="btn btn-success fileinput-button">
+          <i class="glyphicon glyphicon-plus"></i>
+          <span>Select files...</span>
           <%= f.file_field :image, multiple: true, name: "painting[image]" %>
+        </span>
         <% end %>
-      </div>
 
       <script id="template-upload" type="text/x-tmpl">
         <div class="upload">
@@ -62,7 +63,8 @@
         </div>
       </script>
     </div>
-    <br><br>
+    <div style="display:inline-block;" id="showProgressBar"></div>
+    <br>
     <div id="gallary">
       <%= render 'paintings/painting' %>
     </div>
