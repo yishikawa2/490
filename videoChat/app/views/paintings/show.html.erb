@@ -1,7 +1,12 @@
 <br><br><br><br><br>
 <div id='painting' align='center' style='background-color:white; opacity:0.8;  width:70%;margin:auto;'>
   <div class="name" style="font-size:5vh;"><%= @painting.name %></div><br> 
-  <%= image_tag @painting.image_url(:showThumb).to_s %>
-  <br><br><br><br><br>
+  <%= image_tag @painting.image_url(:showThumb).to_s %><br>
+  <!--<div id="action">
+    <%= link_to "Edit",  edit_painting_path(@painting)%> | 
+    <%= link_to 'Remove', @painting, method: :delete, data: {confirm: 'Are you sure?'}  %>
+  </div>-->
+  <br><br><br><br>
 </div>
+<br><br>
 
