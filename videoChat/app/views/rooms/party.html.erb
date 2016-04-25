@@ -43,7 +43,7 @@
         
   <div id="paintings">
     <div id="newPainting" class="newPainting">
-      <p style="color:black;"><b>Shared Images:</b></p>
+      <p style="color:black; font-size:6vh"><b>Shared Images:</b></p>
       <button type="button" id="imageReload" class="btn-primary" onclick="sendSignalImage('<%= @room.id  %>')" style='display:inline-block;'>Reload</button>    
         <%= form_for [@room,@painting], :html => {:multipart => true, :style => 'color: white; display:inline-block'}, :remote => true do |f| %>
         <span class="btn btn-success fileinput-button">
