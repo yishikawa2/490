@@ -1,11 +1,7 @@
 class PaintingsController < ApplicationController
 
   def index
-    @room = Room.find params[:room_id] 
-    respond_to do |format|
-      format.js
-    end
-    
+    @room = Room.find params[:room_id]  
   end
 
   def show
