@@ -215,13 +215,9 @@
       session.on("connectionDestroyed", function(event){
         connectionCount -= 1;
         var subDivId = subDiv.id
-        if($("#"+subDivId).is(":visible")){
-          document.getElementById("videoBox").style.width = "95%";
-          document.getElementById("videoBox").style.right = "0";
-          document.getElementById("videoBox").style.left = "5%";
-        }
         subDiv.remove();
         subDiv = null; 
+        resizePublisher();
         for (var i = 0; i < connectionObjects.length; i++ ){
           if(event.connection.connectionId == connectionObjects[i].connection.connectionId)
             connectionObjects.splice(i, 1);
