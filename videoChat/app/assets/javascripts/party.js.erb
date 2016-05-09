@@ -358,12 +358,14 @@
         for(var i=1; i<=subCount; i++){
           var parentDiv = document.getElementById('subscriberContainer' + i.toString());
           if(parentDiv != null){
-            /*if(targetStreamID != null && type == 'camera'){
-                var tempId = parentDiv.childNodes[0].id;
-                var childDiv = parentDiv.childNodes[0];
-                if(tempId == targetStreamID)
-                  childDiv.remove() 
-            }*/
+            if(targetStreamID != null && type == 'camera'){
+                if(parentDiv.childNodes[0]){
+                  var tempId = parentDiv.childNodes[0].id;
+                  var childDiv = parentDiv.childNodes[0];
+                  if(tempId == targetStreamID)
+                    childDiv.remove() 
+                }
+            }
             if($('#subscriberContainer'+i.toString()).is(':empty')){
               var div = document.createElement('div');
               div.setAttribute('id', 'stream' + stream.streamId);
