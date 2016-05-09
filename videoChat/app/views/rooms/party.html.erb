@@ -48,7 +48,7 @@
         <%= form_for [@room,@painting], :html => {:multipart => true, :style => 'color: white; display:inline-block'}, :remote => true do |f| %>
         <span class="btn btn-success fileinput-button">
           <i class="glyphicon glyphicon-plus"></i>
-          <span>Select files...</span>
+          <span style="font-size:3vh">Select images...</span>
           <%= f.file_field :image, multiple: true, name: "painting[image]" %>
         </span>
         <% end %>

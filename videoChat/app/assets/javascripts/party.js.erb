@@ -357,12 +357,12 @@
         for(var i=1; i<=subCount; i++){
           var parentDiv = document.getElementById('subscriberContainer' + i.toString());
           if(parentDiv != null){
-            if(targetStreamID != null && type == 'camera'){
+            /*if(targetStreamID != null && type == 'camera'){
                 var tempId = parentDiv.childNodes[0].id;
                 var childDiv = parentDiv.childNodes[0];
                 if(tempId == targetStreamID)
                   childDiv.remove() 
-            }
+            }*/
             if($('#subscriberContainer'+i.toString()).is(':empty')){
               var div = document.createElement('div');
               div.setAttribute('id', 'stream' + stream.streamId);
@@ -386,7 +386,7 @@
                   subscribers[i].element.style.height = '100%';
                 }
               }
-              targetStreamId = null;
+              targetStreamID = null;
               var subscriber;
               subscriber = session.subscribe(stream, div.id, {width:'100%', height:'100%'});
               subscribers.push(subscriber);
