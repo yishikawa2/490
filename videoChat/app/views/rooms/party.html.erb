@@ -31,6 +31,7 @@
 
   <div id="options" style='margin:auto'>  
     <input type="image" title="Copy URL" src="<%= asset_path 'copy-link.jpg' %>" alt="submit" width="100%" height="5%" onclick="copyToClipboard('https://bikkun.com/videoChat/party/<%=@room.id%>-<%=@room.name%>')">
+    <input id="displayOnOffButton" title="Display on/off" type="image" src= "<%= asset_path 'display-icon.png' %>" alt="submit" width="100%" height="5%" onclick="displayOnOff()">
     <input id="screenShaeButton" title="Change to Screen Share" type="image" src= "<%= asset_path 'swap.png' %>" alt="submit" width="100%" height="5%" onclick="screenshare()">
     <input id="chatButton" title="Text Chet" type="image" src= "<%= asset_path 'text.jpg' %>" alt="submit" width="100%" height="5%">
     <input type="image" title="Gallery" src="<%= asset_path 'image.png' %>" alt="submit" width="100%" height="5%" onclick="showGallery()">

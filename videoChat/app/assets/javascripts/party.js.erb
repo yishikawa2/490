@@ -435,7 +435,7 @@
               }
               else if (event.reason == "unpublished" && event.stream.videoType == "camera"){
                 event.preventDefault();
-                publisher = OT.initPublisher('publisher', {insertMode:'replace', videoSource: 'screen', name:userName, width:width, height:height});
+                publisher = OT.initPublisher('publisher', { insertMode:'replace', videoSource: 'screen', fitMode: 'cover', name:userName, width:width, height:height});
                 session.publish(publisher, function(error) {
                   if (error)
                     alert('Could not share the screen: ' + error.message);
@@ -588,7 +588,14 @@
         }
       }
  
-     function showNewImage(){
-       $("#newImageForm").fadeToggle('fast');
-     }
+      function showNewImage(){
+        $("#newImageForm").fadeToggle('fast');
+      }
+ 
+      function displayOnOff(){
+         if (publisher.stream.hasVideo)
+           publisher.publishVideo(false)
+         else
+           publisher.publishVideo(true)
+      }
     }    
